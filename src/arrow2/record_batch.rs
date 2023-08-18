@@ -3,7 +3,8 @@ use arrow2::datatypes::{DataType, Field};
 use arrow2::ffi;
 use wasm_bindgen::prelude::*;
 
-use crate::arrow2::{Schema, Vector};
+use crate::arrow2::error::WasmResult;
+use crate::arrow2::{Schema, Table, Vector};
 
 #[wasm_bindgen]
 pub struct RecordBatch {
@@ -63,6 +64,13 @@ impl RecordBatch {
             .iter()
             .position(|field| field.name == name)?;
         self.column(column_idx)
+    }
+
+    /// Consume this record batch and convert to an Arrow IPC Stream buffer
+    #[wasm_bindgen(js_name = intoIPC)]
+    pub fn into_ipc(self) -> WasmResult<Vec<u8>> {
+        let table = Table::new(self.schema, vec![self.chunk]);
+        table.into_ipc()
     }
 }
 

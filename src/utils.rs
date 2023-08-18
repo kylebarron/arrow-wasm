@@ -1,3 +1,7 @@
+/// Call this function at least once during initialization to get better error
+// messages if the underlying Rust code ever panics (creates uncaught errors).
+#[cfg(feature = "console_error_panic_hook")]
+#[wasm_bindgen(js_name = setPanicHook)]
 pub fn set_panic_hook() {
     // When the `console_error_panic_hook` feature is enabled, we can call the
     // `set_panic_hook` function at least once during initialization, and then
@@ -5,6 +9,5 @@ pub fn set_panic_hook() {
     //
     // For more details see
     // https://github.com/rustwasm/console_error_panic_hook#readme
-    #[cfg(feature = "console_error_panic_hook")]
     console_error_panic_hook::set_once();
 }
