@@ -13,6 +13,15 @@ pub struct Table {
     batches: Vec<arrow2::chunk::Chunk<Box<dyn Array>>>,
 }
 
+impl Table {
+    pub fn new(
+        schema: arrow2::datatypes::Schema,
+        batches: Vec<arrow2::chunk::Chunk<Box<dyn Array>>>,
+    ) -> Self {
+        Self { schema, batches }
+    }
+}
+
 #[wasm_bindgen]
 impl Table {
     /// Returns the schema of the record batches.
