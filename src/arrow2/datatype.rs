@@ -9,4 +9,8 @@ impl DataType {
     pub fn new(datatype: arrow2::datatypes::DataType) -> Self {
         Self(datatype)
     }
+
+    pub fn into_inner(self) -> arrow2::datatypes::DataType {
+        self.0
+    }
 }

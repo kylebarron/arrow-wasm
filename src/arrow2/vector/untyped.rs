@@ -10,6 +10,10 @@ impl Vector {
     pub fn new(arr: Box<dyn Array>) -> Self {
         Self(arr)
     }
+
+    pub fn into_inner(self) -> Box<dyn arrow2::array::Array> {
+        self.0
+    }
 }
 
 #[wasm_bindgen]

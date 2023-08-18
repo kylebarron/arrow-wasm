@@ -20,6 +20,15 @@ impl Table {
     ) -> Self {
         Self { schema, batches }
     }
+
+    pub fn into_inner(
+        self,
+    ) -> (
+        arrow2::datatypes::Schema,
+        Vec<arrow2::chunk::Chunk<Box<dyn Array>>>,
+    ) {
+        (self.schema, self.batches)
+    }
 }
 
 #[wasm_bindgen]

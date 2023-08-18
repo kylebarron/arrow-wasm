@@ -7,6 +7,10 @@ impl Schema {
     pub fn new(schema: arrow2::datatypes::Schema) -> Self {
         Self(schema)
     }
+
+    pub fn into_inner(self) -> arrow2::datatypes::Schema {
+        self.0
+    }
 }
 
 // #[wasm_bindgen]
@@ -68,3 +72,15 @@ impl Schema {
 //         })
 //     }
 // }
+
+impl From<arrow2::datatypes::Schema> for Schema {
+    fn from(value: arrow2::datatypes::Schema) -> Self {
+        Self(value)
+    }
+}
+
+impl From<Schema> for arrow2::datatypes::Schema {
+    fn from(value: Schema) -> Self {
+        value.0
+    }
+}

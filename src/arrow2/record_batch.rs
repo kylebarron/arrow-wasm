@@ -1,5 +1,4 @@
 use arrow2::array::{Array, StructArray};
-use arrow2::chunk::Chunk;
 use arrow2::datatypes::{DataType, Field};
 use arrow2::ffi;
 use wasm_bindgen::prelude::*;
@@ -18,6 +17,15 @@ impl RecordBatch {
         chunk: arrow2::chunk::Chunk<Box<dyn Array>>,
     ) -> Self {
         Self { schema, chunk }
+    }
+
+    pub fn into_inner(
+        self,
+    ) -> (
+        arrow2::datatypes::Schema,
+        arrow2::chunk::Chunk<Box<dyn Array>>,
+    ) {
+        (self.schema, self.chunk)
     }
 }
 
