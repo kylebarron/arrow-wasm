@@ -1,0 +1,76 @@
+[package]
+name = "arrow-wasm"
+version = "0.1.0"
+authors = ["Kyle Barron <kylebarron2@gmail.com>"]
+edition = "2021"
+description = "Core library for using Apache Arrow in Rust wasm-bindgen modules."
+readme = "README.md"
+repository = "https://github.com/kylebarron/parquet-wasm"
+license = "MIT OR Apache-2.0"
+keywords = ["webassembly", "arrow"]
+categories = ["wasm"]
+rust-version = "1.62"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[features]
+default = ["arrow2"]
+arrow1 = ["dep:arrow"]
+arrow2 = ["dep:arrow2"]
+debug = ["console_error_panic_hook"]
+
+[dependencies]
+wasm-bindgen = { version = "0.2.83", features = ["serde-serialize"] }
+
+# The `console_error_panic_hook` crate provides better debugging of panics by
+# logging them with `console.error`. This is great for development, but requires
+# all the `std::fmt` and `std::panicking` infrastructure, so isn't great for
+# code size when deploying.
+console_error_panic_hook = { version = "0.1.6", optional = true }
+
+# `wee_alloc` is a tiny allocator for wasm that is only ~1K in code size
+# compared to the default allocator's ~10K. It is slower than the default
+# allocator, however.
+# if wee_alloc only saves 10KB, might not be worth the slower allocation speed?
+# wee_alloc = "0.4.5"
+
+js-sys = "0.3.60"
+getrandom = { version = "0.2.6", features = ["js"] }
+thiserror = "1.0"
+
+arrow2 = { version = "0.17", optional = true, features = [
+  "io_ipc",
+] }
+
+arrow = { version = "45.0", default-features = false, optional = true, features = [
+  "ipc",
+] }
+
+# serde-wasm-bindgen = { version = "0.5", optional = true }
+
+wasm-bindgen-futures = { version = "0.4.30", optional = true }
+
+[dependencies.web-sys]
+version = "0.3.4"
+features = [
+  'console',
+  'Headers',
+  'Request',
+  'RequestInit',
+  'RequestMode',
+  'Response',
+  'Window',
+  "Document",
+  "Element",
+]
+
+[dev-dependencies]
+wasm-bindgen-test = "0.3.31"
+
+[profile.release]
+# Tell `rustc` to optimize for small code size.
+# As of 3/15/22, opt-level = s was smallest
+# https://github.com/kylebarron/parquet-wasm/pull/48
+opt-level = "s"
+lto = true
