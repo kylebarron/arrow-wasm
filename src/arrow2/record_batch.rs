@@ -69,17 +69,6 @@ impl FFIRecordBatch {
     pub fn new(field: Box<ffi::ArrowSchema>, array: Box<ffi::ArrowArray>) -> Self {
         Self { field, array }
     }
-
-    pub fn from_chunk(chunk: Chunk<Box<dyn Array>>, schema: arrow2::datatypes::Schema) -> Self {
-        let data_type = DataType::Struct(schema.fields);
-        let struct_array = StructArray::try_new(data_type.clone(), chunk.to_vec(), None).unwrap();
-        let field = Field::new("", data_type, false).with_metadata(schema.metadata);
-
-        Self {
-            field: Box::new(ffi::export_field_to_c(&field)),
-            array: Box::new(ffi::export_array_to_c(struct_array.boxed())),
-        }
-    }
 }
 
 #[wasm_bindgen]
@@ -92,6 +81,34 @@ impl FFIRecordBatch {
     #[wasm_bindgen]
     pub fn field_addr(&self) -> *const ffi::ArrowSchema {
         self.field.as_ref() as *const _
+    }
+}
+
+impl From<RecordBatch> for FFIRecordBatch {
+    fn from(value: RecordBatch) -> Self {
+        let data_type = DataType::Struct(value.schema.fields);
+        let struct_array =
+            StructArray::try_new(data_type.clone(), value.chunk.to_vec(), None).unwrap();
+        let field = Field::new("", data_type, false).with_metadata(value.schema.metadata);
+
+        Self {
+            field: Box::new(ffi::export_field_to_c(&field)),
+            array: Box::new(ffi::export_array_to_c(struct_array.boxed())),
+        }
+    }
+}
+
+impl From<&RecordBatch> for FFIRecordBatch {
+    fn from(value: &RecordBatch) -> Self {
+        let data_type = DataType::Struct(value.schema.fields.clone());
+        let struct_array =
+            StructArray::try_new(data_type.clone(), value.chunk.to_vec(), None).unwrap();
+        let field = Field::new("", data_type, false).with_metadata(value.schema.metadata.clone());
+
+        Self {
+            field: Box::new(ffi::export_field_to_c(&field)),
+            array: Box::new(ffi::export_array_to_c(struct_array.boxed())),
+        }
     }
 }
 
