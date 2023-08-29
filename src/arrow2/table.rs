@@ -123,7 +123,7 @@ impl FFITable {
     #[wasm_bindgen(js_name = schemaAddr)]
     pub fn schema_addr(&self) -> *const ffi::ArrowSchema {
         // Note: this assumes that every record batch has the same schema
-        self.0[0].field_addr()
+        self.0[0].schema_addr()
     }
 
     /// Get the pointer to one ArrowArray FFI struct for a given chunk index and column index

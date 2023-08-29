@@ -99,13 +99,13 @@ impl FFIRecordBatch {
 
 #[wasm_bindgen]
 impl FFIRecordBatch {
-    #[wasm_bindgen]
+    #[wasm_bindgen(js_name = arrayAddr)]
     pub fn array_addr(&self) -> *const ffi::ArrowArray {
         self.array.as_ref() as *const _
     }
 
-    #[wasm_bindgen]
-    pub fn field_addr(&self) -> *const ffi::ArrowSchema {
+    #[wasm_bindgen(js_name = schemaAddr)]
+    pub fn schema_addr(&self) -> *const ffi::ArrowSchema {
         self.field.as_ref() as *const _
     }
 }

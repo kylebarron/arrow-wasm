@@ -1,5 +1,5 @@
-mod untyped;
 mod ffi;
+mod untyped;
 
-pub use untyped::Vector;
 pub use ffi::FFIVector;
+pub use untyped::Vector;
