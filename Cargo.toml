@@ -16,7 +16,7 @@ crate-type = ["cdylib", "rlib"]
 
 [features]
 default = ["arrow2"]
-arrow1 = ["dep:arrow"]
+arrow1 = ["dep:arrow", "dep:arrow-schema"]
 arrow2 = ["dep:arrow2"]
 debug = ["console_error_panic_hook"]
 
@@ -43,7 +43,8 @@ arrow2 = { version = "0.17", optional = true, features = [
   "io_ipc",
 ] }
 
-arrow = { version = "45.0", default-features = false, optional = true, features = [
+arrow-schema = { version = "46", optional = true }
+arrow = { version = "46.0", default-features = false, optional = true, features = [
   "ipc",
 ] }
 
