@@ -1,6 +1,5 @@
 use wasm_bindgen::prelude::*;
 
-
 /// The set of supported logical types in this crate.
 #[wasm_bindgen]
 pub struct DataType(arrow2::datatypes::DataType);
