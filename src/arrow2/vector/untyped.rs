@@ -3,6 +3,8 @@ use wasm_bindgen::prelude::*;
 
 use crate::arrow2::DataType;
 
+/// An Arrow vector of unknown type that is guaranteed to have contiguous memory (i.e. cannot be
+/// chunked).
 #[wasm_bindgen]
 pub struct Vector(Box<dyn arrow2::array::Array>);
 

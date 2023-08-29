@@ -66,6 +66,16 @@ impl RecordBatch {
         self.column(column_idx)
     }
 
+    #[wasm_bindgen(js_name = toFFI)]
+    pub fn to_ffi(&self) -> WasmResult<FFIRecordBatch> {
+        Ok(self.into())
+    }
+
+    #[wasm_bindgen(js_name = intoFFI)]
+    pub fn into_ffi(self) -> WasmResult<FFIRecordBatch> {
+        Ok(self.into())
+    }
+
     /// Consume this record batch and convert to an Arrow IPC Stream buffer
     #[wasm_bindgen(js_name = intoIPC)]
     pub fn into_ipc(self) -> WasmResult<Vec<u8>> {
