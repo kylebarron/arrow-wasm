@@ -1,5 +1,8 @@
 use wasm_bindgen::prelude::*;
 
+#[cfg(feature = "arrow1")]
+pub mod arrow1;
+
 #[cfg(feature = "arrow2")]
 pub mod arrow2;
 
