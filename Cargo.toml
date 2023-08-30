@@ -15,7 +15,7 @@ rust-version = "1.62"
 crate-type = ["cdylib", "rlib"]
 
 [features]
-default = ["arrow2"]
+default = []
 arrow1 = ["dep:arrow", "dep:arrow-schema"]
 arrow2 = ["dep:arrow2"]
 debug = ["console_error_panic_hook"]
