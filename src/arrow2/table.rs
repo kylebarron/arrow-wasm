@@ -1,6 +1,5 @@
 use crate::arrow2::error::WasmResult;
-use crate::arrow2::{RecordBatch, Schema};
-use crate::ffi::FFIRecordBatch;
+use crate::arrow2::{FFIRecordBatch, RecordBatch, Schema};
 use arrow2::array::Array;
 use arrow2::ffi;
 use arrow2::io::ipc::read::{read_file_metadata, FileReader as IPCFileReader};
@@ -100,6 +99,46 @@ impl Table {
     }
 }
 
+/// Wrapper around an Arrow Table in Wasm memory (a list of FFIArrowRecordBatch objects.)
+///
+/// Refer to {@linkcode readParquetFFI} for instructions on how to use this.
+#[wasm_bindgen]
+pub struct FFITable(Vec<FFIRecordBatch>);
+
+impl FFITable {
+    pub fn new(batches: Vec<FFIRecordBatch>) -> Self {
+        Self(batches)
+    }
+}
+
+#[wasm_bindgen]
+impl FFITable {
+    /// Get the total number of record batches in the table
+    #[wasm_bindgen(js_name = numBatches)]
+    pub fn num_batches(&self) -> usize {
+        self.0.len()
+    }
+
+    /// Get the pointer to one ArrowSchema FFI struct
+    #[wasm_bindgen(js_name = schemaAddr)]
+    pub fn schema_addr(&self) -> *const ffi::ArrowSchema {
+        // Note: this assumes that every record batch has the same schema
+        self.0[0].schema_addr()
+    }
+
+    /// Get the pointer to one ArrowArray FFI struct for a given chunk index and column index
+    /// @param chunk number The chunk index to use
+    /// @returns number pointer to an ArrowArray FFI struct in Wasm memory
+    #[wasm_bindgen(js_name = arrayAddr)]
+    pub fn array_addr(&self, chunk: usize) -> *const ffi::ArrowArray {
+        self.0[chunk].array_addr()
+    }
+
+    #[wasm_bindgen]
+    pub fn drop(self) {
+        drop(self.0);
+    }
+}
 
 impl From<Table> for FFITable {
     fn from(value: Table) -> Self {

@@ -5,7 +5,6 @@ use wasm_bindgen::prelude::*;
 
 use crate::arrow2::error::WasmResult;
 use crate::arrow2::{Schema, Table, Vector};
-use crate::ffi::record_batch::FFIRecordBatch;
 
 #[wasm_bindgen]
 pub struct RecordBatch {
@@ -85,6 +84,31 @@ impl RecordBatch {
     }
 }
 
+/// Wrapper an Arrow RecordBatch stored as FFI in Wasm memory.
+#[wasm_bindgen]
+pub struct FFIRecordBatch {
+    field: Box<ffi::ArrowSchema>,
+    array: Box<ffi::ArrowArray>,
+}
+
+impl FFIRecordBatch {
+    pub fn new(field: Box<ffi::ArrowSchema>, array: Box<ffi::ArrowArray>) -> Self {
+        Self { field, array }
+    }
+}
+
+#[wasm_bindgen]
+impl FFIRecordBatch {
+    #[wasm_bindgen(js_name = arrayAddr)]
+    pub fn array_addr(&self) -> *const ffi::ArrowArray {
+        self.array.as_ref() as *const _
+    }
+
+    #[wasm_bindgen(js_name = schemaAddr)]
+    pub fn schema_addr(&self) -> *const ffi::ArrowSchema {
+        self.field.as_ref() as *const _
+    }
+}
 
 impl From<RecordBatch> for FFIRecordBatch {
     fn from(value: RecordBatch) -> Self {

@@ -45,6 +45,7 @@ arrow2 = { version = "0.17", optional = true, features = [
 
 arrow-schema = { version = "46", optional = true }
 arrow = { version = "46.0", default-features = false, optional = true, features = [
+  "ffi",
   "ipc",
 ] }
 

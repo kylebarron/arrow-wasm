@@ -6,7 +6,6 @@ pub mod arrow1;
 #[cfg(feature = "arrow2")]
 pub mod arrow2;
 
-pub mod ffi;
 mod utils;
 
 /// Returns a handle to this wasm instance's `WebAssembly.Memory`
