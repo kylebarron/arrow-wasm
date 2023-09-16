@@ -51,8 +51,8 @@ impl Table {
     }
 
     /// Consume this table and convert to an Arrow IPC Stream buffer
-    #[wasm_bindgen(js_name = intoIPC)]
-    pub fn into_ipc(self) -> WasmResult<Vec<u8>> {
+    #[wasm_bindgen(js_name = intoIPCStream)]
+    pub fn into_ipc_stream(self) -> WasmResult<Vec<u8>> {
         let mut output_file = Vec::new();
 
         {
@@ -72,8 +72,8 @@ impl Table {
     }
 
     /// Create a table from an Arrow IPC Stream buffer
-    #[wasm_bindgen(js_name = fromIPC)]
-    pub fn from_ipc(buf: &[u8]) -> WasmResult<Table> {
+    #[wasm_bindgen(js_name = fromIPCStream)]
+    pub fn from_ipc_stream(buf: &[u8]) -> WasmResult<Table> {
         let input_file = Cursor::new(buf);
         let arrow_ipc_reader = StreamReader::try_new(input_file, None)?;
 
