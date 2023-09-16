@@ -1,3 +1,4 @@
+#[cfg(feature = "console_error_panic_hook")]
 use wasm_bindgen::prelude::*;
 
 /// Call this function at least once during initialization to get better error
