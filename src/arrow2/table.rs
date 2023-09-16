@@ -2,7 +2,10 @@ use crate::arrow2::error::WasmResult;
 use crate::arrow2::{FFIRecordBatch, RecordBatch, Schema};
 use arrow2::array::Array;
 use arrow2::ffi;
-use arrow2::io::ipc::read::{read_stream_metadata, StreamReader, StreamState};
+use arrow2::io::ipc::read::{
+    read_file_metadata, read_stream_metadata, FileReader as IPCFileReader, StreamReader,
+    StreamState,
+};
 use arrow2::io::ipc::write::{StreamWriter as IPCStreamWriter, WriteOptions as IPCWriteOptions};
 use std::io::Cursor;
 use wasm_bindgen::prelude::*;
@@ -78,6 +81,24 @@ impl Table {
 
         writer.finish()?;
         Ok(output_file)
+    }
+
+    /// Create a table from an Arrow IPC File buffer
+    #[wasm_bindgen(js_name = fromIPCFile)]
+    pub fn from_ipc_file(buf: Vec<u8>) -> WasmResult<Table> {
+        let mut input_file = Cursor::new(buf);
+        let stream_metadata = read_file_metadata(&mut input_file)?;
+        let arrow_ipc_reader = IPCFileReader::new(input_file, stream_metadata.clone(), None, None);
+
+        let schema = stream_metadata.schema.clone();
+        let mut batches = vec![];
+
+        for maybe_chunk in arrow_ipc_reader {
+            let chunk = maybe_chunk?;
+            batches.push(chunk);
+        }
+
+        Ok(Self { schema, batches })
     }
 
     /// Create a table from an Arrow IPC Stream buffer
