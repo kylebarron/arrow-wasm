@@ -9,7 +9,7 @@ pub mod arrow2;
 mod utils;
 
 /// Returns a handle to this wasm instance's `WebAssembly.Memory`
-#[wasm_bindgen(js_name = _memory)]
+#[wasm_bindgen(js_name = wasmMemory)]
 pub fn memory() -> JsValue {
     wasm_bindgen::memory()
 }
