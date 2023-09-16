@@ -2,7 +2,7 @@ use crate::arrow2::error::WasmResult;
 use crate::arrow2::{FFIRecordBatch, RecordBatch, Schema};
 use arrow2::array::Array;
 use arrow2::ffi;
-use arrow2::io::ipc::read::{read_file_metadata, FileReader as IPCFileReader};
+use arrow2::io::ipc::read::{read_stream_metadata, StreamReader, StreamState};
 use arrow2::io::ipc::write::{StreamWriter as IPCStreamWriter, WriteOptions as IPCWriteOptions};
 use std::io::Cursor;
 use wasm_bindgen::prelude::*;
@@ -84,18 +84,27 @@ impl Table {
     #[wasm_bindgen(js_name = fromIPCStream)]
     pub fn from_ipc_stream(buf: Vec<u8>) -> WasmResult<Table> {
         let mut input_file = Cursor::new(buf);
-        let stream_metadata = read_file_metadata(&mut input_file)?;
-        let arrow_ipc_reader = IPCFileReader::new(input_file, stream_metadata.clone(), None, None);
+        let stream_metadata = read_stream_metadata(&mut input_file)?;
+        let stream = StreamReader::new(&mut input_file, stream_metadata.clone(), None);
 
-        let schema = stream_metadata.schema.clone();
         let mut batches = vec![];
 
-        for maybe_chunk in arrow_ipc_reader {
-            let chunk = maybe_chunk?;
-            batches.push(chunk);
+        for maybe_stream_state in stream {
+            match maybe_stream_state {
+                Ok(StreamState::Some(chunk)) => {
+                    batches.push(chunk);
+                }
+                Ok(StreamState::Waiting) => {
+                    panic!("Expected the entire stream to be contained in input buffer")
+                }
+                Err(l) => return Err(l.into()),
+            }
         }
 
-        Ok(Self { schema, batches })
+        Ok(Self {
+            schema: stream_metadata.schema,
+            batches,
+        })
     }
 }
 
