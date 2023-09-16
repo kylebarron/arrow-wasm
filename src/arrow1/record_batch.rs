@@ -46,10 +46,10 @@ impl RecordBatch {
     }
 
     /// Consume this record batch and convert to an Arrow IPC Stream buffer
-    #[wasm_bindgen(js_name = intoIPC)]
-    pub fn into_ipc(self) -> WasmResult<Vec<u8>> {
+    #[wasm_bindgen(js_name = intoIPCStream)]
+    pub fn into_ipc_stream(self) -> WasmResult<Vec<u8>> {
         let table = Table::new(vec![self.0]);
-        table.into_ipc()
+        table.into_ipc_stream()
     }
 }
 
