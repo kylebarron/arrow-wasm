@@ -4,6 +4,7 @@ use arrow::array::{Array, StructArray};
 use arrow::ffi::{self, to_ffi};
 use wasm_bindgen::prelude::*;
 
+/// A group of columns of equal length in WebAssembly memory with an associated {@linkcode Schema}.
 #[wasm_bindgen]
 pub struct RecordBatch(arrow::record_batch::RecordBatch);
 
@@ -19,33 +20,45 @@ impl RecordBatch {
 
 #[wasm_bindgen]
 impl RecordBatch {
+    /// The number of rows in this RecordBatch.
     #[wasm_bindgen(getter, js_name = numRows)]
     pub fn num_rows(&self) -> usize {
         self.0.num_rows()
     }
 
+    /// The number of columns in this RecordBatch.
     #[wasm_bindgen(getter, js_name = numColumns)]
     pub fn num_columns(&self) -> usize {
         self.0.num_columns()
     }
 
-    /// Returns the schema of the record batches.
+    /// The {@linkcode Schema} of this RecordBatch.
     #[wasm_bindgen(getter)]
     pub fn schema(&self) -> Schema {
         Schema::new(self.0.schema())
     }
 
+    /// Export this RecordBatch to FFI structs according to the Arrow C Data Interface.
+    ///
+    /// This method **does not consume** the RecordBatch, so you must remember to call {@linkcode
+    /// RecordBatch.free} to release the resources. The underlying arrays are reference counted, so
+    /// this method does not copy data, it only prevents the data from being released.
     #[wasm_bindgen(js_name = toFFI)]
     pub fn to_ffi(&self) -> WasmResult<FFIRecordBatch> {
         Ok(self.into())
     }
 
+    /// Export this RecordBatch to FFI structs according to the Arrow C Data Interface.
+    ///
+    /// This method **does consume** the RecordBatch, so the original RecordBatch will be
+    /// inaccessible after this call. You must still call {@linkcode FFIRecordBatch.free} after
+    /// you've finished using the FFIRecordBatch.
     #[wasm_bindgen(js_name = intoFFI)]
     pub fn into_ffi(self) -> WasmResult<FFIRecordBatch> {
         Ok(self.into())
     }
 
-    /// Consume this record batch and convert to an Arrow IPC Stream buffer
+    /// Consume this RecordBatch and convert to an Arrow IPC Stream buffer
     #[wasm_bindgen(js_name = intoIPCStream)]
     pub fn into_ipc_stream(self) -> WasmResult<Vec<u8>> {
         let table = Table::new(vec![self.0]);
@@ -53,7 +66,8 @@ impl RecordBatch {
     }
 }
 
-/// Wrapper an Arrow RecordBatch stored as FFI in Wasm memory.
+/// A representation of an Arrow RecordBatch in WebAssembly memory exposed as FFI-compatible
+/// structs through the Arrow C Data Interface.
 #[wasm_bindgen]
 pub struct FFIRecordBatch {
     array: Box<ffi::FFI_ArrowArray>,
@@ -68,11 +82,57 @@ impl FFIRecordBatch {
 
 #[wasm_bindgen]
 impl FFIRecordBatch {
+    /// Access the pointer to the
+    /// [`ArrowArray`](https://arrow.apache.org/docs/format/CDataInterface.html#structure-definitions)
+    /// struct. This can be viewed or copied (without serialization) to an Arrow JS `RecordBatch` by
+    /// using [`arrow-js-ffi`](https://github.com/kylebarron/arrow-js-ffi). You can access the
+    /// [`WebAssembly.Memory`](https://developer.mozilla.org/en-US/docs/WebAssembly/JavaScript_interface/Memory)
+    /// instance by using {@linkcode wasmMemory}.
+    ///
+    /// **Example**:
+    ///
+    /// ```ts
+    /// import { parseRecordBatch } from "arrow-js-ffi";
+    ///
+    /// const wasmRecordBatch: FFIRecordBatch = ...
+    /// const wasmMemory: WebAssembly.Memory = wasmMemory();
+    ///
+    /// // Pass `true` to copy arrays across the boundary instead of creating views.
+    /// const jsRecordBatch = parseRecordBatch(
+    ///   wasmMemory.buffer,
+    ///   wasmRecordBatch.arrayAddr(),
+    ///   wasmRecordBatch.schemaAddr(),
+    ///   true
+    /// );
+    /// ```
     #[wasm_bindgen(js_name = arrayAddr)]
     pub fn array_addr(&self) -> *const ffi::FFI_ArrowArray {
         self.array.as_ref() as *const _
     }
 
+    /// Access the pointer to the
+    /// [`ArrowSchema`](https://arrow.apache.org/docs/format/CDataInterface.html#structure-definitions)
+    /// struct. This can be viewed or copied (without serialization) to an Arrow JS `Field` by
+    /// using [`arrow-js-ffi`](https://github.com/kylebarron/arrow-js-ffi). You can access the
+    /// [`WebAssembly.Memory`](https://developer.mozilla.org/en-US/docs/WebAssembly/JavaScript_interface/Memory)
+    /// instance by using {@linkcode wasmMemory}.
+    ///
+    /// **Example**:
+    ///
+    /// ```ts
+    /// import { parseRecordBatch } from "arrow-js-ffi";
+    ///
+    /// const wasmRecordBatch: FFIRecordBatch = ...
+    /// const wasmMemory: WebAssembly.Memory = wasmMemory();
+    ///
+    /// // Pass `true` to copy arrays across the boundary instead of creating views.
+    /// const jsRecordBatch = parseRecordBatch(
+    ///   wasmMemory.buffer,
+    ///   wasmRecordBatch.arrayAddr(),
+    ///   wasmRecordBatch.schemaAddr(),
+    ///   true
+    /// );
+    /// ```
     #[wasm_bindgen(js_name = schemaAddr)]
     pub fn schema_addr(&self) -> *const ffi::FFI_ArrowSchema {
         self.field.as_ref() as *const _

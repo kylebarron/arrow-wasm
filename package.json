@@ -1,0 +1,21 @@
+{
+  "name": "arrow-wasm",
+  "packageManager": "yarn@3.3.1",
+  "scripts": {
+    "build": "bash ./scripts/build.sh",
+    "build:test": "ENV='DEV' yarn build",
+    "docs:build": "typedoc",
+    "docs:publish": "gh-pages -d docs_build",
+    "docs:serve": "cd docs_build && python -m http.server 8081",
+    "docs:watch": "typedoc --watch"
+  },
+  "volta": {
+    "node": "20.7.0",
+    "yarn": "3.6.3"
+  },
+  "devDependencies": {
+    "gh-pages": "^6.0.0",
+    "typedoc": "^0.25.1",
+    "typescript": "^5.2.2"
+  }
+}
