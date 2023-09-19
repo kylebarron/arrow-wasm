@@ -1,7 +1,6 @@
 use std::sync::Arc;
 use wasm_bindgen::prelude::*;
 
-
 /// A named collection of types that defines the column names and types in a RecordBatch or Table
 /// data structure.
 ///
