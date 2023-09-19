@@ -1,0 +1,20 @@
+{
+  "name": "arrow-wasm",
+  "cleanOutputDir": true,
+  "darkHighlightTheme": "github-dark",
+  "entryPoints": [
+    "pkg/node/arrow1.d.ts",
+    "pkg/node/arrow2.d.ts",
+    "pkg/bundler/arrow1.d.ts",
+    "pkg/bundler/arrow2.d.ts",
+    "pkg/esm/arrow1.d.ts",
+    "pkg/esm/arrow2.d.ts"
+  ],
+  "lightHighlightTheme": "github-light",
+  "tsconfig": "tsconfig.docs.json",
+  "out": "docs_build",
+  "excludePrivate": true,
+  "excludeProtected": true,
+  "excludeExternals": true,
+  "includeVersion": true
+}
