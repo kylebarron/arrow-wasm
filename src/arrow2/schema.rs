@@ -1,5 +1,11 @@
 use wasm_bindgen::prelude::*;
 
+/// A named collection of types that defines the column names and types in a RecordBatch or Table
+/// data structure.
+///
+/// A Schema can also contain extra user-defined metadata either at the Table or Column level.
+/// Column-level metadata is often used to define [extension
+/// types](https://arrow.apache.org/docs/format/Columnar.html#extension-types).
 #[wasm_bindgen]
 pub struct Schema(arrow2::datatypes::Schema);
 
