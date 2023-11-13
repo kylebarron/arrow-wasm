@@ -5,6 +5,20 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 10
+    groups:
+      arrow-rs:
+        patterns:
+          - "arrow*"
+        exclude-patterns:
+          - "arrow2*"
+      arrow2:
+        patterns:
+          - "arrow2"
+      other:
+        patterns:
+          - "*"
+        exclude-patterns:
+          - "arrow*"
   - package-ecosystem: github-actions
     directory: "/"
     schedule:
