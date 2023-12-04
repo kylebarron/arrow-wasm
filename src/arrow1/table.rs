@@ -104,6 +104,15 @@ impl Table {
 
         Ok(Self(batches))
     }
+
+    /// Returns the total number of bytes of memory occupied physically by all batches in this
+    /// table.
+    #[wasm_bindgen]
+    pub fn get_array_memory_size(&self) -> usize {
+        self.0
+            .iter()
+            .fold(0, |sum, batch| sum + batch.get_array_memory_size())
+    }
 }
 
 /// A representation of an Arrow Table in WebAssembly memory exposed as FFI-compatible
