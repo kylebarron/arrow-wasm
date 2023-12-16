@@ -1,3 +1,4 @@
+pub mod arrow_js;
 pub mod error;
 pub mod record_batch;
 pub mod schema;
