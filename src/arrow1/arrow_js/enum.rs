@@ -3,20 +3,20 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 pub enum UnionMode {
     Sparse = 0,
-    Dense = 1
+    Dense = 1,
 }
 
 #[wasm_bindgen]
 pub enum Precision {
     Half = 0,
     Single = 1,
-    Double = 2
+    Double = 2,
 }
 
 #[wasm_bindgen]
 pub enum DateUnit {
     Day = 0,
-    Millisecond = 1
+    Millisecond = 1,
 }
 
 #[wasm_bindgen]
@@ -24,14 +24,14 @@ pub enum TimeUnit {
     Second = 0,
     Millisecond = 1,
     Microsecond = 2,
-    Nanosecond = 3
+    Nanosecond = 3,
 }
 
 #[wasm_bindgen]
 pub enum IntervalUnit {
     YearMonth = 0,
     DayTime = 1,
-    MonthDayNano = 2
+    MonthDayNano = 2,
 }
 
 #[wasm_bindgen(js_name = Type)]
@@ -97,5 +97,5 @@ pub enum BufferType {
     /**
      * Type vector used in Union type
      */
-    Type = 3
+    Type = 3,
 }
