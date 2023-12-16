@@ -1,5 +1,9 @@
-use arrow_schema::DataType;
+use std::sync::Arc;
+
+use arrow_schema::{DataType, UnionFields};
 use wasm_bindgen::prelude::*;
+
+use crate::arrow1::arrow_js::field::{import_field, JSField};
 
 #[wasm_bindgen]
 extern "C" {
@@ -65,6 +69,46 @@ extern "C" {
     pub fn unit(this: &JSDuration) -> super::r#enum::TimeUnit;
 
     pub type JSList;
+
+    #[wasm_bindgen(method, getter)]
+    pub fn children(this: &JSList) -> Vec<JSField>;
+
+    pub type JSStruct;
+
+    #[wasm_bindgen(method, getter)]
+    pub fn children(this: &JSStruct) -> Vec<JSField>;
+
+    pub type JSUnion;
+
+    #[wasm_bindgen(method, getter)]
+    pub fn mode(this: &JSUnion) -> super::r#enum::UnionMode;
+
+    #[wasm_bindgen(method, getter, js_name = "typeIds")]
+    pub fn type_ids(this: &JSUnion) -> js_sys::Int32Array;
+
+    #[wasm_bindgen(method, getter)]
+    pub fn children(this: &JSUnion) -> Vec<JSField>;
+
+    pub type JSFixedSizeBinary;
+
+    #[wasm_bindgen(method, getter, js_name = "byteWidth")]
+    pub fn byte_width(this: &JSFixedSizeBinary) -> i32;
+
+    pub type JSFixedSizeList;
+
+    #[wasm_bindgen(method, getter, js_name = "listSize")]
+    pub fn list_size(this: &JSFixedSizeList) -> i32;
+
+    #[wasm_bindgen(method, getter)]
+    pub fn children(this: &JSFixedSizeList) -> Vec<JSField>;
+
+    pub type JSMap_;
+
+    #[wasm_bindgen(method, getter, js_name = "keysSorted")]
+    pub fn keys_sorted(this: &JSMap_) -> bool;
+
+    #[wasm_bindgen(method, getter)]
+    pub fn children(this: &JSMap_) -> Vec<JSField>;
 
 }
 
@@ -164,10 +208,71 @@ fn import_duration(js_type: &JSDuration) -> DataType {
     }
 }
 
+fn import_list(js_type: &JSList) -> DataType {
+    let mut children = js_type.children();
+    assert_eq!(children.len(), 1);
+    let child = children.pop().unwrap();
+    let field = import_field(&child);
+    DataType::List(Arc::new(field))
+}
+
+fn import_struct(js_type: &JSStruct) -> DataType {
+    let fields = js_type
+        .children()
+        .into_iter()
+        .map(|child| import_field(&child))
+        .collect();
+    DataType::Struct(fields)
+}
+
+fn import_union(js_type: &JSUnion) -> DataType {
+    use super::r#enum::UnionMode;
+
+    let fields: Vec<arrow_schema::Field> = js_type
+        .children()
+        .into_iter()
+        .map(|child| import_field(&child))
+        .collect();
+    let type_ids: Vec<i8> = js_type
+        .type_ids()
+        .to_vec()
+        .into_iter()
+        .map(|val| i8::try_from(val).unwrap())
+        .collect();
+
+    let union_fields = UnionFields::new(type_ids, fields);
+    match js_type.mode() {
+        UnionMode::Dense => DataType::Union(union_fields, arrow_schema::UnionMode::Dense),
+        UnionMode::Sparse => DataType::Union(union_fields, arrow_schema::UnionMode::Sparse),
+    }
+}
+
+fn import_fixed_size_binary(js_type: &JSFixedSizeBinary) -> DataType {
+    DataType::FixedSizeBinary(js_type.byte_width())
+}
+
+fn import_fixed_size_list(js_type: &JSFixedSizeList) -> DataType {
+    let mut children = js_type.children();
+    assert_eq!(children.len(), 1);
+    let child = children.pop().unwrap();
+    let field = import_field(&child);
+    DataType::FixedSizeList(Arc::new(field), js_type.list_size())
+}
+
+fn import_map(js_type: &JSMap_) -> DataType {
+    let mut children = js_type.children();
+    assert_eq!(children.len(), 1);
+    let child = children.pop().unwrap();
+    let field = import_field(&child);
+    DataType::Map(Arc::new(field), js_type.keys_sorted())
+}
+
 pub fn import_data_type(js_type: &JSDataType) -> DataType {
     use super::r#enum::Type;
 
     match js_type.type_id() {
+        // Type None should never be initialized
+        Type::NONE => panic!("Type None"),
         Type::Null => DataType::Null,
         Type::Int => import_int(js_type.unchecked_ref()),
         Type::Float => import_float(js_type.unchecked_ref()),
@@ -180,7 +285,11 @@ pub fn import_data_type(js_type: &JSDataType) -> DataType {
         Type::Timestamp => import_timestamp(js_type.unchecked_ref()),
         Type::Interval => import_interval(js_type.unchecked_ref()),
         Type::Duration => import_duration(js_type.unchecked_ref()),
-
-        _ => todo!(),
+        Type::List => import_list(js_type.unchecked_ref()),
+        Type::Struct => import_struct(js_type.unchecked_ref()),
+        Type::Union => import_union(js_type.unchecked_ref()),
+        Type::FixedSizeBinary => import_fixed_size_binary(js_type.unchecked_ref()),
+        Type::FixedSizeList => import_fixed_size_list(js_type.unchecked_ref()),
+        Type::Map => import_map(js_type.unchecked_ref()),
     }
 }

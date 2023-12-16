@@ -11,6 +11,7 @@ use wasm_bindgen::prelude::*;
 ///
 /// A Table consists of one or more {@linkcode RecordBatch} objects plus a {@linkcode Schema} that
 /// each RecordBatch conforms to.
+#[derive(Debug)]
 #[wasm_bindgen]
 pub struct Table(Vec<arrow::record_batch::RecordBatch>);
 
