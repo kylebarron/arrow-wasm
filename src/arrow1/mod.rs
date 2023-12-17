@@ -1,5 +1,6 @@
 pub mod data;
 pub mod datatype;
+pub mod arrow_js;
 pub mod error;
 pub mod ffi;
 pub mod field;
