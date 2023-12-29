@@ -64,6 +64,28 @@ impl RecordBatch {
         let table = Table::new(vec![self.0]);
         table.into_ipc_stream()
     }
+
+    /// Override the schema of this [`RecordBatch`]
+    ///
+    /// Returns an error if `schema` is not a superset of the current schema
+    /// as determined by [`Schema::contains`]
+    #[wasm_bindgen]
+    pub fn with_schema(&self, schema: Schema) -> WasmResult<RecordBatch> {
+        Ok(self.0.clone().with_schema(schema.0)?.into())
+    }
+
+    /// Return a new RecordBatch where each column is sliced
+    /// according to `offset` and `length`
+    #[wasm_bindgen]
+    pub fn slice(&self, offset: usize, length: usize) -> RecordBatch {
+        self.0.slice(offset, length).into()
+    }
+
+    /// Returns the total number of bytes of memory occupied physically by this batch.
+    #[wasm_bindgen]
+    pub fn get_array_memory_size(&self) -> usize {
+        self.0.get_array_memory_size()
+    }
 }
 
 /// A representation of an Arrow RecordBatch in WebAssembly memory exposed as FFI-compatible
