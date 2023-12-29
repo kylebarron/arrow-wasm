@@ -20,6 +20,30 @@ macro_rules! impl_data {
                 Ok(ffi_arr.into())
             }
         }
+
+        impl $struct_name {
+            pub fn new(arr: $arrow_type) -> Self {
+                Self(arr)
+            }
+        }
+
+        impl From<$struct_name> for $arrow_type {
+            fn from(value: $struct_name) -> Self {
+                value.0
+            }
+        }
+
+        impl From<$arrow_type> for $struct_name {
+            fn from(value: $arrow_type) -> Self {
+                Self(value)
+            }
+        }
+
+        impl AsRef<$arrow_type> for $struct_name {
+            fn as_ref(&self) -> &$arrow_type {
+                &self.0
+            }
+        }
     };
 }
 

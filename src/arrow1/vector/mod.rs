@@ -5,6 +5,30 @@ macro_rules! impl_vector {
     ($struct_name:ident, $arrow_type:ty) => {
         #[wasm_bindgen]
         pub struct $struct_name(Vec<$arrow_type>);
+
+        impl $struct_name {
+            pub fn new(chunked_arr: Vec<$arrow_type>) -> Self {
+                Self(chunked_arr)
+            }
+        }
+
+        impl From<$struct_name> for Vec<$arrow_type> {
+            fn from(value: $struct_name) -> Self {
+                value.0
+            }
+        }
+
+        impl From<Vec<$arrow_type>> for $struct_name {
+            fn from(value: Vec<$arrow_type>) -> Self {
+                Self(value)
+            }
+        }
+
+        impl AsRef<[$arrow_type]> for $struct_name {
+            fn as_ref(&self) -> &[$arrow_type] {
+                self.0.as_slice()
+            }
+        }
     };
 }
 
