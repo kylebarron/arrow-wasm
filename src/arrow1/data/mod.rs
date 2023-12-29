@@ -23,6 +23,7 @@ macro_rules! impl_data {
     };
 }
 
+impl_data!(BooleanData, arrow::array::BooleanArray);
 impl_data!(Uint8Data, arrow::array::UInt8Array);
 impl_data!(Uint16Data, arrow::array::UInt16Array);
 impl_data!(Uint32Data, arrow::array::UInt32Array);

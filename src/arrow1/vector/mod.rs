@@ -8,6 +8,7 @@ macro_rules! impl_vector {
     };
 }
 
+impl_vector!(BooleanVector, arrow::array::BooleanArray);
 impl_vector!(Uint8Vector, arrow::array::UInt8Array);
 impl_vector!(Uint16Vector, arrow::array::UInt16Array);
 impl_vector!(Uint32Vector, arrow::array::UInt32Array);
