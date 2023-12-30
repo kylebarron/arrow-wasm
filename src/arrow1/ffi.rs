@@ -66,6 +66,24 @@ impl TryFrom<&Field> for FFIArrowSchema {
     }
 }
 
+impl TryFrom<&arrow_schema::Schema> for FFIArrowSchema {
+    type Error = crate::arrow1::error::ArrowWasmError;
+
+    fn try_from(value: &arrow_schema::Schema) -> Result<Self> {
+        let ffi_schema = ffi::FFI_ArrowSchema::try_from(value)?;
+        Ok(Self(Box::new(ffi_schema)))
+    }
+}
+
+impl TryFrom<&arrow_schema::Field> for FFIArrowSchema {
+    type Error = crate::arrow1::error::ArrowWasmError;
+
+    fn try_from(value: &arrow_schema::Field) -> Result<Self> {
+        let ffi_schema = ffi::FFI_ArrowSchema::try_from(value)?;
+        Ok(Self(Box::new(ffi_schema)))
+    }
+}
+
 impl TryFrom<Schema> for FFIArrowSchema {
     type Error = crate::arrow1::error::ArrowWasmError;
 
@@ -196,6 +214,41 @@ impl FFIArrowArrayStream {
     }
 }
 
+/// A pointer to an Arrow `Data`` in WebAssembly memory.
+///
+/// Using [`arrow-js-ffi`](https://github.com/kylebarron/arrow-js-ffi), you can view or copy Arrow
+/// these objects to JavaScript.
+///
+
+// TODO: fix example
+// ```ts
+// import { parseField, parseVector } from "arrow-js-ffi";
+//
+// // You need to access the geoarrow webassembly memory space.
+// // The way to do this is different per geoarrow bundle method.
+// const WASM_MEMORY: WebAssembly.Memory = geoarrow.__wasm.memory;
+//
+// // Say we have a point array from somewhere
+// const pointArray: geoarrow.PointArray = ...;
+//
+// // Export this existing point array to wasm.
+// const ffiArray = pointArray.toFfi();
+//
+// // Parse an arrow-js field object from the pointer
+// const jsArrowField = parseField(WASM_MEMORY.buffer, ffiArray.field_addr());
+//
+// // Parse an arrow-js vector from the pointer and parsed field
+// const jsPointVector = parseVector(
+//   WASM_MEMORY.buffer,
+//   ffiArray.array_addr(),
+//   field.type
+// );
+// ```
+//
+// ## Memory management
+//
+// Note that this array will not be released automatically. You need to manually call `.free()` to
+// release memory.
 #[wasm_bindgen]
 pub struct FFIData {
     field: FFIArrowSchema,
