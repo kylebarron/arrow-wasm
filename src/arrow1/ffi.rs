@@ -314,7 +314,7 @@ impl FFIVector {
     ///
     // TODO: validate that each chunk has the same data types?
     pub fn from_arrow(
-        chunks: Vec<Box<dyn Array>>,
+        chunks: Vec<Arc<dyn Array>>,
         field: Option<impl Into<FFIArrowSchema>>,
     ) -> Result<Self> {
         let mut ffi_field: Option<FFIArrowSchema> = field.map(|f| f.into());
