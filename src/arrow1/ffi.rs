@@ -1,8 +1,11 @@
+use std::sync::Arc;
+
+use arrow::array::Array;
 use arrow::ffi;
 use arrow::ffi_stream;
 use wasm_bindgen::prelude::*;
 
-use crate::arrow1::error::WasmResult;
+use crate::arrow1::error::{Result, WasmResult};
 use crate::arrow1::{Field, Schema};
 
 #[wasm_bindgen]
@@ -48,7 +51,7 @@ impl FFIArrowSchema {
 impl TryFrom<&Schema> for FFIArrowSchema {
     type Error = crate::arrow1::error::ArrowWasmError;
 
-    fn try_from(value: &Schema) -> Result<Self, Self::Error> {
+    fn try_from(value: &Schema) -> Result<Self> {
         let ffi_schema = ffi::FFI_ArrowSchema::try_from(value.0.as_ref())?;
         Ok(Self(Box::new(ffi_schema)))
     }
@@ -57,9 +60,41 @@ impl TryFrom<&Schema> for FFIArrowSchema {
 impl TryFrom<&Field> for FFIArrowSchema {
     type Error = crate::arrow1::error::ArrowWasmError;
 
-    fn try_from(value: &Field) -> Result<Self, Self::Error> {
+    fn try_from(value: &Field) -> Result<Self> {
         let ffi_schema = ffi::FFI_ArrowSchema::try_from(value.0.as_ref())?;
         Ok(Self(Box::new(ffi_schema)))
+    }
+}
+
+impl TryFrom<Schema> for FFIArrowSchema {
+    type Error = crate::arrow1::error::ArrowWasmError;
+
+    fn try_from(value: Schema) -> Result<Self> {
+        (&value).try_into()
+    }
+}
+
+impl TryFrom<Field> for FFIArrowSchema {
+    type Error = crate::arrow1::error::ArrowWasmError;
+
+    fn try_from(value: Field) -> Result<Self> {
+        (&value).try_into()
+    }
+}
+
+impl TryFrom<Arc<Schema>> for FFIArrowSchema {
+    type Error = crate::arrow1::error::ArrowWasmError;
+
+    fn try_from(value: Arc<Schema>) -> Result<Self> {
+        value.as_ref().try_into()
+    }
+}
+
+impl TryFrom<Arc<Field>> for FFIArrowSchema {
+    type Error = crate::arrow1::error::ArrowWasmError;
+
+    fn try_from(value: Arc<Field>) -> Result<Self> {
+        value.as_ref().try_into()
     }
 }
 
@@ -87,6 +122,14 @@ impl From<Box<ffi::FFI_ArrowArray>> for FFIArrowArray {
 impl From<ffi::FFI_ArrowArray> for FFIArrowArray {
     fn from(value: ffi::FFI_ArrowArray) -> Self {
         Self(Box::new(value))
+    }
+}
+
+#[wasm_bindgen]
+impl FFIArrowArray {
+    #[wasm_bindgen]
+    pub fn addr(&self) -> *const ffi::FFI_ArrowArray {
+        self.0.as_ref() as *const _
     }
 }
 
@@ -141,6 +184,57 @@ impl FFIArrowArrayStream {
                 "Cannot get array from input stream. Error code: {ret_code:?}",
             ))
         }
+    }
+}
+
+#[wasm_bindgen]
+pub struct FFIVector {
+    field: FFIArrowSchema,
+    chunks: Vec<ffi::FFI_ArrowArray>,
+}
+
+impl FFIVector {
+    pub fn from_raw(field: FFIArrowSchema, chunks: Vec<ffi::FFI_ArrowArray>) -> Self {
+        Self { field, chunks }
+    }
+
+    /// Construct an FFIVector from array chunks and optionally from the provided field.
+    ///
+    /// For now, the field is inferred from the first chunk if not provided.
+    ///
+    // TODO: validate that each chunk has the same data types?
+    pub fn from_arrow(
+        chunks: Vec<Box<dyn Array>>,
+        field: Option<impl Into<FFIArrowSchema>>,
+    ) -> Result<Self> {
+        let mut ffi_field: Option<FFIArrowSchema> = field.map(|f| f.into());
+        let mut ffi_chunks = Vec::with_capacity(chunks.len());
+
+        for chunk in chunks {
+            let (ffi_array, ffi_schema) = ffi::to_ffi(&chunk.to_data())?;
+            if ffi_field.is_none() {
+                ffi_field = Some(FFIArrowSchema::new(Box::new(ffi_schema)));
+            }
+            ffi_chunks.push(ffi_array);
+        }
+
+        Ok(Self {
+            field: ffi_field.unwrap(),
+            chunks: ffi_chunks,
+        })
+    }
+}
+
+#[wasm_bindgen]
+impl FFIVector {
+    #[wasm_bindgen(js_name = schemaAddr)]
+    pub fn schema_addr(&self) -> *const ffi::FFI_ArrowSchema {
+        self.field.addr()
+    }
+
+    #[wasm_bindgen(js_name = arrayAddr)]
+    pub fn array_addr(&self, i: usize) -> WasmResult<*const ffi::FFI_ArrowArray> {
+        Ok(self.chunks.get(i).unwrap() as *const _)
     }
 }
 
