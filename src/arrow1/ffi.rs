@@ -125,6 +125,15 @@ impl From<ffi::FFI_ArrowArray> for FFIArrowArray {
     }
 }
 
+impl TryFrom<&dyn Array> for FFIArrowArray {
+    type Error = crate::arrow1::error::ArrowWasmError;
+
+    fn try_from(value: &dyn Array) -> Result<Self> {
+        let (ffi_array, _ffi_schema) = ffi::to_ffi(&value.to_data())?;
+        Ok(Self(Box::new(ffi_array)))
+    }
+}
+
 #[wasm_bindgen]
 impl FFIArrowArray {
     #[wasm_bindgen]
@@ -184,6 +193,54 @@ impl FFIArrowArrayStream {
                 "Cannot get array from input stream. Error code: {ret_code:?}",
             ))
         }
+    }
+}
+
+#[wasm_bindgen]
+pub struct FFIData {
+    field: FFIArrowSchema,
+    array: FFIArrowArray,
+}
+
+impl FFIData {
+    pub fn from_raw(field: FFIArrowSchema, array: FFIArrowArray) -> Self {
+        Self { field, array }
+    }
+
+    pub fn from_arrow(field: Option<impl Into<FFIArrowSchema>>, array: &dyn Array) -> Result<Self> {
+        let (ffi_array, ffi_schema) = ffi::to_ffi(&array.to_data())?;
+        let ffi_schema = field
+            .map(|f| f.into())
+            .unwrap_or_else(|| Box::new(ffi_schema).into());
+        Ok(Self {
+            field: ffi_schema,
+            array: Box::new(ffi_array).into(),
+        })
+    }
+}
+
+impl TryFrom<&dyn Array> for FFIData {
+    type Error = crate::arrow1::error::ArrowWasmError;
+
+    fn try_from(value: &dyn Array) -> Result<Self> {
+        let (ffi_array, ffi_schema) = ffi::to_ffi(&value.to_data())?;
+        Ok(Self {
+            field: Box::new(ffi_schema).into(),
+            array: Box::new(ffi_array).into(),
+        })
+    }
+}
+
+#[wasm_bindgen]
+impl FFIData {
+    #[wasm_bindgen(js_name = arrayAddr)]
+    pub fn array_addr(&self) -> *const ffi::FFI_ArrowArray {
+        self.array.addr()
+    }
+
+    #[wasm_bindgen]
+    pub fn schema_addr(&self) -> *const ffi::FFI_ArrowSchema {
+        self.field.addr()
     }
 }
 
