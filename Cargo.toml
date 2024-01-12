@@ -43,8 +43,8 @@ arrow2 = { version = "0.18", optional = true, features = ["io_ipc"] }
 
 # Temporary for compatibility with geoarrow-rs until next release
 #
-arrow-schema = { git = "https://github.com/apache/arrow-rs", rev = "fbbb61d94282165f9bb9f73fb4d00a3af16d4aee", optional = true }
-arrow = { git = "https://github.com/apache/arrow-rs", rev = "fbbb61d94282165f9bb9f73fb4d00a3af16d4aee", default-features = false, optional = true, features = [
+arrow-schema = { version = "50", optional = true }
+arrow = { version = "50", default-features = false, optional = true, features = [
   "ffi",
   "ipc",
 ] }
