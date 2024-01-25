@@ -1,8 +1,8 @@
 mod datatype;
 mod typed_array;
 
-use crate::arrow1::error::WasmResult;
-use crate::arrow1::ffi::FFIArrowArray;
+use crate::error::WasmResult;
+use crate::ffi::FFIArrowArray;
 use arrow::array::Array;
 use wasm_bindgen::prelude::*;
 

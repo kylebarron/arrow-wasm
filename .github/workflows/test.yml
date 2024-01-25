@@ -23,22 +23,12 @@ jobs:
       - name: Cargo fmt
         run: cargo fmt --all -- --check
 
-      - name: "clippy arrow1"
-        run: cargo clippy --all --features arrow1 --tests -- -D warnings
+      - name: "clippy"
+        run: cargo clippy --all --tests -- -D warnings
 
-      - name: "check arrow1"
-        run: cargo check --all --features arrow1
+      - name: "check"
+        run: cargo check --all
 
-      - name: "test arrow1"
+      - name: "test"
         run: |
-          cargo test --all --features arrow1
-
-      - name: "clippy arrow2"
-        run: cargo clippy --all --features arrow2 --tests -- -D warnings
-
-      - name: "check arrow2"
-        run: cargo check --all --features arrow2
-
-      - name: "test arrow2"
-        run: |
-          cargo test --all --features arrow2
+          cargo test --all

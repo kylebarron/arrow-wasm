@@ -1,5 +1,5 @@
-use crate::arrow1::error::WasmResult;
-use crate::arrow1::{Schema, Table};
+use crate::error::WasmResult;
+use crate::{Schema, Table};
 use arrow::array::{Array, StructArray};
 use arrow::ffi::{self, to_ffi};
 use wasm_bindgen::prelude::*;

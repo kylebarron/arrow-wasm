@@ -1,12 +1,9 @@
-use crate::arrow2::error::WasmResult;
-use crate::arrow2::{FFIRecordBatch, RecordBatch, Schema};
-use arrow2::array::Array;
-use arrow2::ffi;
-use arrow2::io::ipc::read::{
-    read_file_metadata, read_stream_metadata, FileReader as IPCFileReader, StreamReader,
-    StreamState,
-};
-use arrow2::io::ipc::write::{StreamWriter as IPCStreamWriter, WriteOptions as IPCWriteOptions};
+use crate::error::WasmResult;
+use crate::Schema;
+use crate::{FFIRecordBatch, RecordBatch};
+use arrow::ffi;
+use arrow::ipc::reader::StreamReader;
+use arrow::ipc::writer::StreamWriter;
 use std::io::Cursor;
 use wasm_bindgen::prelude::*;
 
@@ -14,28 +11,18 @@ use wasm_bindgen::prelude::*;
 ///
 /// A Table consists of one or more {@linkcode RecordBatch} objects plus a {@linkcode Schema} that
 /// each RecordBatch conforms to.
+#[derive(Debug)]
 #[wasm_bindgen]
-pub struct Table {
-    schema: arrow2::datatypes::Schema,
-    batches: Vec<arrow2::chunk::Chunk<Box<dyn Array>>>,
-}
+pub struct Table(Vec<arrow::record_batch::RecordBatch>);
 
 impl Table {
-    pub fn new(
-        schema: arrow2::datatypes::Schema,
-        batches: Vec<arrow2::chunk::Chunk<Box<dyn Array>>>,
-    ) -> Self {
-        Self { schema, batches }
+    pub fn new(batches: Vec<arrow::record_batch::RecordBatch>) -> Self {
+        Self(batches)
     }
 
     /// Consume this table and return its components
-    pub fn into_inner(
-        self,
-    ) -> (
-        arrow2::datatypes::Schema,
-        Vec<arrow2::chunk::Chunk<Box<dyn Array>>>,
-    ) {
-        (self.schema, self.batches)
+    pub fn into_inner(self) -> Vec<arrow::record_batch::RecordBatch> {
+        self.0
     }
 }
 
@@ -44,7 +31,7 @@ impl Table {
     /// Access the Table's {@linkcode Schema}.
     #[wasm_bindgen(getter)]
     pub fn schema(&self) -> Schema {
-        Schema::new(self.schema.clone())
+        Schema::new(self.0[0].schema())
     }
 
     /// Access a RecordBatch from the Table by index.
@@ -53,15 +40,14 @@ impl Table {
     /// @returns a RecordBatch or `null` if out of range.
     #[wasm_bindgen(js_name = recordBatch)]
     pub fn record_batch(&self, index: usize) -> Option<RecordBatch> {
-        let batch = self.batches.get(index)?;
-
-        Some(RecordBatch::new(self.schema.clone(), batch.clone()))
+        let batch = self.0.get(index)?;
+        Some(RecordBatch::new(batch.clone()))
     }
 
     /// The number of batches in the Table
     #[wasm_bindgen(getter, js_name = numBatches)]
     pub fn num_batches(&self) -> usize {
-        self.batches.len()
+        self.0.len()
     }
 
     /// Export this Table to FFI structs according to the Arrow C Data Interface.
@@ -70,8 +56,8 @@ impl Table {
     /// Table.free} to release the resources. The underlying arrays are reference counted, so
     /// this method does not copy data, it only prevents the data from being released.
     #[wasm_bindgen(js_name = toFFI)]
-    pub fn to_ffi(&self) -> WasmResult<FFITable> {
-        Ok(self.into())
+    pub fn to_ffi(&self) -> FFITable {
+        self.into()
     }
 
     /// Export this Table to FFI structs according to the Arrow C Data Interface.
@@ -80,71 +66,53 @@ impl Table {
     /// inaccessible after this call. You must still call {@linkcode FFITable.free} after
     /// you've finished using the FFITable.
     #[wasm_bindgen(js_name = intoFFI)]
-    pub fn into_ffi(self) -> WasmResult<FFITable> {
-        Ok(self.into())
+    pub fn into_ffi(self) -> FFITable {
+        self.into()
     }
 
     /// Consume this table and convert to an Arrow IPC Stream buffer
     #[wasm_bindgen(js_name = intoIPCStream)]
     pub fn into_ipc_stream(self) -> WasmResult<Vec<u8>> {
-        // Create IPC writer
         let mut output_file = Vec::new();
-        let options = IPCWriteOptions { compression: None };
-        let mut writer = IPCStreamWriter::new(&mut output_file, options);
-        writer.start(&self.schema, None)?;
 
-        // Iterate over chunks, writing each into the IPC writer
-        for chunk in self.batches {
-            writer.write(&chunk, None)?;
+        {
+            let mut writer = StreamWriter::try_new(&mut output_file, &self.schema().into_inner())?;
+
+            // Iterate over record batches, writing them to IPC stream
+            for chunk in self.0 {
+                writer.write(&chunk)?;
+            }
+            writer.finish()?;
         }
 
-        writer.finish()?;
+        // Note that this returns output_file directly instead of using
+        // writer.into_inner().to_vec() as the latter seems likely to incur an extra copy of the
+        // vec
         Ok(output_file)
     }
 
-    /// Create a table from an Arrow IPC File buffer
-    #[wasm_bindgen(js_name = fromIPCFile)]
-    pub fn from_ipc_file(buf: Vec<u8>) -> WasmResult<Table> {
-        let mut input_file = Cursor::new(buf);
-        let stream_metadata = read_file_metadata(&mut input_file)?;
-        let arrow_ipc_reader = IPCFileReader::new(input_file, stream_metadata.clone(), None, None);
+    /// Create a table from an Arrow IPC Stream buffer
+    #[wasm_bindgen(js_name = fromIPCStream)]
+    pub fn from_ipc_stream(buf: &[u8]) -> WasmResult<Table> {
+        let input_file = Cursor::new(buf);
+        let arrow_ipc_reader = StreamReader::try_new(input_file, None)?;
 
-        let schema = stream_metadata.schema.clone();
         let mut batches = vec![];
-
         for maybe_chunk in arrow_ipc_reader {
             let chunk = maybe_chunk?;
             batches.push(chunk);
         }
 
-        Ok(Self { schema, batches })
+        Ok(Self(batches))
     }
 
-    /// Create a table from an Arrow IPC Stream buffer
-    #[wasm_bindgen(js_name = fromIPCStream)]
-    pub fn from_ipc_stream(buf: Vec<u8>) -> WasmResult<Table> {
-        let mut input_file = Cursor::new(buf);
-        let stream_metadata = read_stream_metadata(&mut input_file)?;
-        let stream = StreamReader::new(&mut input_file, stream_metadata.clone(), None);
-
-        let mut batches = vec![];
-
-        for maybe_stream_state in stream {
-            match maybe_stream_state {
-                Ok(StreamState::Some(chunk)) => {
-                    batches.push(chunk);
-                }
-                Ok(StreamState::Waiting) => {
-                    panic!("Expected the entire stream to be contained in input buffer")
-                }
-                Err(l) => return Err(l.into()),
-            }
-        }
-
-        Ok(Self {
-            schema: stream_metadata.schema,
-            batches,
-        })
+    /// Returns the total number of bytes of memory occupied physically by all batches in this
+    /// table.
+    #[wasm_bindgen]
+    pub fn get_array_memory_size(&self) -> usize {
+        self.0
+            .iter()
+            .fold(0, |sum, batch| sum + batch.get_array_memory_size())
     }
 }
 
@@ -169,7 +137,7 @@ impl FFITable {
 
     /// Get the pointer to one ArrowSchema FFI struct
     #[wasm_bindgen(js_name = schemaAddr)]
-    pub fn schema_addr(&self) -> *const ffi::ArrowSchema {
+    pub fn schema_addr(&self) -> *const ffi::FFI_ArrowSchema {
         // Note: this assumes that every record batch has the same schema
         self.0[0].schema_addr()
     }
@@ -209,7 +177,7 @@ impl FFITable {
     /// @param chunk number The chunk index to use
     /// @returns number pointer to an ArrowArray FFI struct in Wasm memory
     #[wasm_bindgen(js_name = arrayAddr)]
-    pub fn array_addr(&self, chunk: usize) -> *const ffi::ArrowArray {
+    pub fn array_addr(&self, chunk: usize) -> *const ffi::FFI_ArrowArray {
         self.0[chunk].array_addr()
     }
 
@@ -224,8 +192,7 @@ impl From<Table> for FFITable {
         let num_batches = value.num_batches();
         let mut ffi_batches = Vec::with_capacity(num_batches);
 
-        for i in 0..num_batches {
-            let batch = value.record_batch(i).unwrap();
+        for batch in value.0.into_iter() {
             ffi_batches.push(batch.into());
         }
 
@@ -238,31 +205,10 @@ impl From<&Table> for FFITable {
         let num_batches = value.num_batches();
         let mut ffi_batches = Vec::with_capacity(num_batches);
 
-        for i in 0..num_batches {
-            let batch = value.record_batch(i).unwrap();
+        for batch in value.0.iter() {
             ffi_batches.push(batch.into());
         }
 
         Self(ffi_batches)
     }
 }
-
-// impl FFITable {
-//     pub fn import(self) -> Result<(Schema, ArrowTable)> {
-//         todo!()
-//         // let schema: Schema = self.schema.as_ref().try_into()?;
-//         // let data_types: Vec<&DataType> = schema
-//         //     .fields
-//         //     .iter()
-//         //     .map(|field| field.data_type())
-//         //     .collect();
-
-//         // let mut chunks: Vec<Chunk<Box<dyn Array>>> = vec![];
-//         // for chunk in self.chunks.into_iter() {
-//         //     let imported = chunk.import(&data_types)?;
-//         //     chunks.push(imported);
-//         // }
-
-//         // Ok((schema, chunks))
-//     }
-// }

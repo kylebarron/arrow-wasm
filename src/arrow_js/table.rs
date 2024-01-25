@@ -1,8 +1,8 @@
 use wasm_bindgen::prelude::*;
 
-use crate::arrow1::arrow_js::record_batch::{import_record_batch, JSRecordBatch};
-use crate::arrow1::arrow_js::schema::JSSchema;
-use crate::arrow1::Table;
+use crate::arrow_js::record_batch::{import_record_batch, JSRecordBatch};
+use crate::arrow_js::schema::JSSchema;
+use crate::Table;
 
 #[wasm_bindgen]
 extern "C" {
