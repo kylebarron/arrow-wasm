@@ -15,8 +15,26 @@ rust-version = "1.62"
 crate-type = ["cdylib", "rlib"]
 
 [features]
-default = []
+default = ["all"]
+all = ["arrow1", "data", "data_type", "read_arrow_js", "table", "vector"]
+
 arrow1 = ["dep:arrow", "dep:arrow-schema"]
+
+# Include Data classes for contiguous Arrow memory
+data = []
+
+# Include DataType classes for contiguous Arrow memory
+data_type = []
+
+# Include functionality to read Arrow JS objects directly.
+read_arrow_js = []
+
+# Include Table class
+table = []
+
+# Include Vector classes for chunked Arrow memory
+vector = []
+
 arrow2 = ["dep:arrow2"]
 debug = ["console_error_panic_hook"]
 
