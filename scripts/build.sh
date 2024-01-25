@@ -54,6 +54,7 @@ wasm-pack build \
   --out-dir tmp_build/node2 \
   --out-name arrow2 \
   --target nodejs \
+  --no-default-features \
   --features arrow2 \
   $FLAGS
 
@@ -64,6 +65,7 @@ wasm-pack build \
   --out-dir tmp_build/esm2 \
   --out-name arrow2 \
   --target web \
+  --no-default-features \
   --features arrow2 \
   $FLAGS
 
@@ -74,6 +76,7 @@ wasm-pack build \
   --out-dir tmp_build/bundler2 \
   --out-name arrow2 \
   --target bundler \
+  --no-default-features \
   --features arrow2 \
   $FLAGS
 
