@@ -1,7 +1,7 @@
 use arrow_schema::Field;
 use wasm_bindgen::prelude::*;
 
-use crate::arrow1::arrow_js::r#type::{import_data_type, JSDataType};
+use crate::arrow_js::r#type::{import_data_type, JSDataType};
 
 #[wasm_bindgen]
 extern "C" {

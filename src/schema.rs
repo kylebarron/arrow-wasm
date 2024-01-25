@@ -2,8 +2,8 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use wasm_bindgen::prelude::*;
 
-use crate::arrow1::error::WasmResult;
-use crate::arrow1::Field;
+use crate::error::WasmResult;
+use crate::Field;
 
 #[wasm_bindgen(typescript_custom_section)]
 const TS_SchemaMetadata: &'static str = r#"
@@ -29,8 +29,8 @@ pub struct Schema(pub(crate) arrow_schema::SchemaRef);
 impl Schema {
     /// Export this schema to an FFIArrowSchema object, which can be read with arrow-js-ffi.
     #[wasm_bindgen]
-    pub fn to_ffi(&self) -> WasmResult<crate::arrow1::ffi::FFIArrowSchema> {
-        Ok(crate::arrow1::ffi::FFIArrowSchema::try_from(self)?)
+    pub fn to_ffi(&self) -> WasmResult<crate::ffi::FFIArrowSchema> {
+        Ok(crate::ffi::FFIArrowSchema::try_from(self)?)
     }
 
     /// Returns an immutable reference of a specific [`Field`] instance selected using an

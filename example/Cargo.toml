@@ -24,7 +24,7 @@ wasm-bindgen = { version = "0.2.83", features = ["serde-serialize"] }
 console_error_panic_hook = { version = "0.1.6", optional = true }
 
 js-sys = "0.3.60"
-arrow-wasm = { path = "../", features = ["arrow1"] }
+arrow-wasm = { path = "../" }
 
 
 [dev-dependencies]

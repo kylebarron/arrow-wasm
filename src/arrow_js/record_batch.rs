@@ -4,8 +4,8 @@ use arrow::array::{make_array, AsArray};
 use arrow::record_batch::RecordBatch;
 use wasm_bindgen::prelude::*;
 
-use crate::arrow1::arrow_js::data::{import_data, JSData};
-use crate::arrow1::arrow_js::schema::{import_schema, JSSchema};
+use crate::arrow_js::data::{import_data, JSData};
+use crate::arrow_js::schema::{import_schema, JSSchema};
 
 #[wasm_bindgen]
 extern "C" {

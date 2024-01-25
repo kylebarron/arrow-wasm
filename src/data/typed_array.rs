@@ -1,4 +1,4 @@
-use crate::arrow1::data::*;
+use crate::data::*;
 
 use arrow::datatypes::ArrowPrimitiveType;
 use wasm_bindgen::prelude::*;
