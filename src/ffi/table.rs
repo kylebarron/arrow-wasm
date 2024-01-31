@@ -1,6 +1,7 @@
 use crate::ffi::array::FFIArrowArray;
 use crate::ffi::schema::FFIArrowSchema;
 use arrow::ffi;
+use wasm_bindgen::convert::IntoWasmAbi;
 use wasm_bindgen::prelude::*;
 
 /// A representation of an Arrow Table in WebAssembly memory exposed as FFI-compatible
@@ -68,6 +69,14 @@ impl FFITable {
     #[wasm_bindgen(js_name = arrayAddr)]
     pub fn array_addr(&self, chunk: usize) -> *const ffi::FFI_ArrowArray {
         self.batches[chunk].addr()
+    }
+
+    #[wasm_bindgen(js_name = arrayAddrs)]
+    pub fn array_addrs(&self) -> Vec<u32> {
+        // wasm-bindgen doesn't allow a Vec<*const ffi::FFI_ArrowArray> so we cast to u32
+        (0..self.num_batches())
+            .map(|chunk_idx| self.array_addr(chunk_idx).into_abi())
+            .collect()
     }
 
     #[wasm_bindgen]
