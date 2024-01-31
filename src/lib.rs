@@ -18,9 +18,9 @@ pub mod vector;
 
 pub use error::ArrowWasmError;
 pub use field::Field;
-pub use record_batch::{FFIRecordBatch, RecordBatch};
+pub use record_batch::RecordBatch;
 pub use schema::Schema;
-pub use table::{FFITable, Table};
+pub use table::Table;
 
 mod utils;
 
