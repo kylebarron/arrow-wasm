@@ -1,4 +1,3 @@
-mod ffi;
 use wasm_bindgen::prelude::*;
 
 macro_rules! impl_vector {
