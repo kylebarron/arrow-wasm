@@ -41,9 +41,9 @@ impl Field {
     }
 
     #[wasm_bindgen]
-    pub fn data_type(&self) -> JsValue {
+    pub fn data_type(&self) -> WasmResult<JsValue> {
         let dt = self.0.data_type();
-        match dt {
+        let result = match dt {
             DataType::Null => crate::datatype::Null.into(),
             DataType::Boolean => crate::datatype::Boolean.into(),
             DataType::Int8 => crate::datatype::Int8.into(),
@@ -95,7 +95,13 @@ impl Field {
             DataType::RunEndEncoded(run_ends, values) => {
                 crate::datatype::RunEndEncoded::new(run_ends.clone(), values.clone()).into()
             }
-        }
+            dt => {
+                return Err(JsError::new(
+                    format!("data type not yet supported: {}", dt).as_str(),
+                ))
+            }
+        };
+        Ok(result)
     }
 
     /// Indicates whether this [`Field`] supports null values.
