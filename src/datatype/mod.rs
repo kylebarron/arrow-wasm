@@ -1,3 +1,6 @@
+// Allow struct fields to match Arrow representation, even when not currently used
+#![allow(dead_code)]
+
 use arrow_schema::{FieldRef, Fields, IntervalUnit, TimeUnit, UnionFields, UnionMode};
 use std::sync::Arc;
 use wasm_bindgen::prelude::*;

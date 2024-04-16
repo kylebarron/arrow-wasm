@@ -22,7 +22,7 @@ pub struct Field(pub(crate) arrow_schema::FieldRef);
 #[wasm_bindgen]
 impl Field {
     /// Export this field to an `FFIArrowSchema`` object, which can be read with arrow-js-ffi.
-    #[wasm_bindgen]
+    #[wasm_bindgen(js_name = toFFI)]
     pub fn to_ffi(&self) -> WasmResult<crate::ffi::FFIArrowSchema> {
         Ok(crate::ffi::FFIArrowSchema::try_from(self)?)
     }
@@ -34,13 +34,13 @@ impl Field {
     }
 
     /// Sets the name of this `Field` and returns a new object
-    #[wasm_bindgen]
+    #[wasm_bindgen(js_name = withName)]
     pub fn with_name(&mut self, name: String) -> WasmResult<Field> {
         let field = self.0.as_ref().clone();
         Ok(field.with_name(name).into())
     }
 
-    #[wasm_bindgen]
+    #[wasm_bindgen(js_name = dataType)]
     pub fn data_type(&self) -> WasmResult<JsValue> {
         let dt = self.0.data_type();
         let result = match dt {
@@ -105,7 +105,7 @@ impl Field {
     }
 
     /// Indicates whether this [`Field`] supports null values.
-    #[wasm_bindgen]
+    #[wasm_bindgen(js_name = isNullable)]
     pub fn is_nullable(&self) -> bool {
         self.0.is_nullable()
     }
@@ -116,7 +116,7 @@ impl Field {
     }
 
     /// Sets the metadata of this `Field` to be `metadata` and returns a new object
-    #[wasm_bindgen]
+    #[wasm_bindgen(js_name = withMetadata)]
     pub fn with_metadata(&mut self, metadata: FieldMetadata) -> WasmResult<Field> {
         let metadata: HashMap<String, String> = serde_wasm_bindgen::from_value(metadata.into())?;
         let field = self.0.as_ref().clone();
