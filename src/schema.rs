@@ -28,7 +28,7 @@ pub struct Schema(pub(crate) arrow_schema::SchemaRef);
 #[wasm_bindgen]
 impl Schema {
     /// Export this schema to an FFIArrowSchema object, which can be read with arrow-js-ffi.
-    #[wasm_bindgen]
+    #[wasm_bindgen(js_name = toFFI)]
     pub fn to_ffi(&self) -> WasmResult<crate::ffi::FFIArrowSchema> {
         Ok(crate::ffi::FFIArrowSchema::try_from(self)?)
     }
@@ -41,21 +41,22 @@ impl Schema {
     }
 
     /// Returns an immutable reference of a specific [`Field`] instance selected by name.
-    #[wasm_bindgen]
+    #[wasm_bindgen(js_name = fieldWithName)]
     pub fn field_with_name(&self, name: &str) -> WasmResult<Field> {
         let field = self.0.field_with_name(name)?;
         Ok(field.clone().into())
     }
 
     /// Sets the metadata of this `Schema` to be `metadata` and returns a new object
-    #[wasm_bindgen]
+    #[wasm_bindgen(js_name = withMetadata)]
     pub fn with_metadata(&mut self, metadata: SchemaMetadata) -> WasmResult<Schema> {
         let metadata: HashMap<String, String> = serde_wasm_bindgen::from_value(metadata.into())?;
         let field = self.0.as_ref().clone();
         Ok(field.with_metadata(metadata).into())
     }
 
-    #[wasm_bindgen]
+    /// Find the index of the column with the given name.
+    #[wasm_bindgen(js_name = indexOf)]
     pub fn index_of(&mut self, name: &str) -> WasmResult<usize> {
         Ok(self.0.index_of(name)?)
     }

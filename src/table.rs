@@ -123,7 +123,7 @@ impl Table {
 
     /// Returns the total number of bytes of memory occupied physically by all batches in this
     /// table.
-    #[wasm_bindgen]
+    #[wasm_bindgen(js_name = getArrayMemorySize)]
     pub fn get_array_memory_size(&self) -> usize {
         self.batches
             .iter()

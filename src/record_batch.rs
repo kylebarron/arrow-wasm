@@ -68,7 +68,7 @@ impl RecordBatch {
     ///
     /// Returns an error if `schema` is not a superset of the current schema
     /// as determined by [`Schema::contains`]
-    #[wasm_bindgen]
+    #[wasm_bindgen(js_name = withSchema)]
     pub fn with_schema(&self, schema: Schema) -> WasmResult<RecordBatch> {
         Ok(self.0.clone().with_schema(schema.0)?.into())
     }
@@ -81,7 +81,7 @@ impl RecordBatch {
     }
 
     /// Returns the total number of bytes of memory occupied physically by this batch.
-    #[wasm_bindgen]
+    #[wasm_bindgen(js_name = getArrayMemorySize)]
     pub fn get_array_memory_size(&self) -> usize {
         self.0.get_array_memory_size()
     }
