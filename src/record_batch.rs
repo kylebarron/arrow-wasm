@@ -1,6 +1,5 @@
 use crate::error::WasmResult;
 use crate::ffi::record_batch::FFIRecordBatch;
-use crate::{Schema, Table};
 use wasm_bindgen::prelude::*;
 
 /// A group of columns of equal length in WebAssembly memory with an associated {@linkcode Schema}.
@@ -32,9 +31,10 @@ impl RecordBatch {
     }
 
     /// The {@linkcode Schema} of this RecordBatch.
+    #[cfg(feature = "schema")]
     #[wasm_bindgen(getter)]
-    pub fn schema(&self) -> Schema {
-        Schema::new(self.0.schema())
+    pub fn schema(&self) -> crate::Schema {
+        crate::Schema::new(self.0.schema())
     }
 
     /// Export this RecordBatch to FFI structs according to the Arrow C Data Interface.
@@ -60,7 +60,7 @@ impl RecordBatch {
     /// Consume this RecordBatch and convert to an Arrow IPC Stream buffer
     #[wasm_bindgen(js_name = intoIPCStream)]
     pub fn into_ipc_stream(self) -> WasmResult<Vec<u8>> {
-        let table = Table::new(self.0.schema(), vec![self.0]);
+        let table = crate::Table::new(self.0.schema(), vec![self.0]);
         table.into_ipc_stream()
     }
 
@@ -68,8 +68,9 @@ impl RecordBatch {
     ///
     /// Returns an error if `schema` is not a superset of the current schema
     /// as determined by [`Schema::contains`]
+    #[cfg(feature = "schema")]
     #[wasm_bindgen(js_name = withSchema)]
-    pub fn with_schema(&self, schema: Schema) -> WasmResult<RecordBatch> {
+    pub fn with_schema(&self, schema: crate::Schema) -> WasmResult<RecordBatch> {
         Ok(self.0.clone().with_schema(schema.0)?.into())
     }
 

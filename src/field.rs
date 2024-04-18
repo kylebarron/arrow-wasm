@@ -40,6 +40,7 @@ impl Field {
         Ok(field.with_name(name).into())
     }
 
+    #[cfg(feature = "data_type")]
     #[wasm_bindgen(js_name = dataType)]
     pub fn data_type(&self) -> WasmResult<JsValue> {
         let dt = self.0.data_type();

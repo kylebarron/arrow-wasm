@@ -8,8 +8,11 @@ pub mod data;
 pub mod datatype;
 pub mod error;
 pub mod ffi;
+#[cfg(feature = "field")]
 pub mod field;
+#[cfg(feature = "record_batch")]
 pub mod record_batch;
+#[cfg(feature = "schema")]
 pub mod schema;
 #[cfg(feature = "table")]
 pub mod table;
@@ -17,9 +20,13 @@ pub mod table;
 pub mod vector;
 
 pub use error::ArrowWasmError;
+#[cfg(feature = "field")]
 pub use field::Field;
+#[cfg(feature = "record_batch")]
 pub use record_batch::RecordBatch;
+#[cfg(feature = "schema")]
 pub use schema::Schema;
+#[cfg(feature = "table")]
 pub use table::Table;
 
 mod utils;
