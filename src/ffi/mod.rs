@@ -9,4 +9,5 @@ pub use array::FFIArrowArray;
 pub use data::FFIData;
 pub use record_batch::FFIRecordBatch;
 pub use schema::FFIArrowSchema;
+pub use table::FFITable;
 pub use vector::FFIVector;

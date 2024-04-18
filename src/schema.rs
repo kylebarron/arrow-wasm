@@ -3,7 +3,6 @@ use std::sync::Arc;
 use wasm_bindgen::prelude::*;
 
 use crate::error::WasmResult;
-use crate::Field;
 
 #[wasm_bindgen(typescript_custom_section)]
 const TS_SchemaMetadata: &'static str = r#"
@@ -35,14 +34,16 @@ impl Schema {
 
     /// Returns an immutable reference of a specific [`Field`] instance selected using an
     /// offset within the internal `fields` vector.
+    #[cfg(feature = "field")]
     #[wasm_bindgen]
-    pub fn field(&self, i: usize) -> Field {
+    pub fn field(&self, i: usize) -> crate::Field {
         (self.0.fields()[i].clone()).into()
     }
 
     /// Returns an immutable reference of a specific [`Field`] instance selected by name.
+    #[cfg(feature = "field")]
     #[wasm_bindgen(js_name = fieldWithName)]
-    pub fn field_with_name(&self, name: &str) -> WasmResult<Field> {
+    pub fn field_with_name(&self, name: &str) -> WasmResult<crate::Field> {
         let field = self.0.field_with_name(name)?;
         Ok(field.clone().into())
     }

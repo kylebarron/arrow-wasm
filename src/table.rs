@@ -1,8 +1,7 @@
 use crate::error::WasmResult;
 use crate::ffi::table::FFITable;
 use crate::ffi::FFIArrowSchema;
-use crate::RecordBatch;
-use crate::{ArrowWasmError, Schema};
+use crate::ArrowWasmError;
 use arrow::array::{Array, StructArray};
 use arrow::ffi;
 use arrow::ipc::reader::StreamReader;
@@ -43,19 +42,30 @@ impl Table {
 #[wasm_bindgen]
 impl Table {
     /// Access the Table's {@linkcode Schema}.
+    #[cfg(feature = "schema")]
     #[wasm_bindgen(getter)]
-    pub fn schema(&self) -> Schema {
-        Schema::new(self.schema.clone())
+    pub fn schema(&self) -> crate::Schema {
+        crate::Schema::new(self.schema.clone())
     }
 
     /// Access a RecordBatch from the Table by index.
     ///
     /// @param index The positional index of the RecordBatch to retrieve.
     /// @returns a RecordBatch or `null` if out of range.
+    #[cfg(feature = "recordBatch")]
     #[wasm_bindgen(js_name = recordBatch)]
     pub fn record_batch(&self, index: usize) -> Option<RecordBatch> {
         let batch = self.batches.get(index)?;
         Some(RecordBatch::new(batch.clone()))
+    }
+
+    #[cfg(feature = "recordBatch")]
+    #[wasm_bindgen(js_name = recordBatches)]
+    pub fn record_batches(&self, index: usize) -> Vec<RecordBatch> {
+        self.batches
+            .iter()
+            .map(|batch| RecordBatch::new(batch.clone()))
+            .collect()
     }
 
     /// The number of batches in the Table
@@ -90,7 +100,7 @@ impl Table {
         let mut output_file = Vec::new();
 
         {
-            let mut writer = StreamWriter::try_new(&mut output_file, &self.schema().into_inner())?;
+            let mut writer = StreamWriter::try_new(&mut output_file, &self.schema)?;
 
             // Iterate over record batches, writing them to IPC stream
             for chunk in self.batches {

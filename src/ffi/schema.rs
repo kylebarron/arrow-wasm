@@ -1,10 +1,7 @@
-use std::sync::Arc;
-
 use arrow::ffi;
 use wasm_bindgen::prelude::*;
 
 use crate::error::Result;
-use crate::{Field, Schema};
 
 #[wasm_bindgen]
 pub struct FFIArrowSchema(Box<ffi::FFI_ArrowSchema>);
@@ -46,24 +43,6 @@ impl FFIArrowSchema {
     }
 }
 
-impl TryFrom<&Schema> for FFIArrowSchema {
-    type Error = crate::error::ArrowWasmError;
-
-    fn try_from(value: &Schema) -> Result<Self> {
-        let ffi_schema = ffi::FFI_ArrowSchema::try_from(value.0.as_ref())?;
-        Ok(Self(Box::new(ffi_schema)))
-    }
-}
-
-impl TryFrom<&Field> for FFIArrowSchema {
-    type Error = crate::error::ArrowWasmError;
-
-    fn try_from(value: &Field) -> Result<Self> {
-        let ffi_schema = ffi::FFI_ArrowSchema::try_from(value.0.as_ref())?;
-        Ok(Self(Box::new(ffi_schema)))
-    }
-}
-
 impl TryFrom<&arrow_schema::Schema> for FFIArrowSchema {
     type Error = crate::error::ArrowWasmError;
 
@@ -82,35 +61,41 @@ impl TryFrom<&arrow_schema::Field> for FFIArrowSchema {
     }
 }
 
-impl TryFrom<Schema> for FFIArrowSchema {
+#[cfg(feature = "schema")]
+impl TryFrom<&crate::Schema> for FFIArrowSchema {
     type Error = crate::error::ArrowWasmError;
 
-    fn try_from(value: Schema) -> Result<Self> {
+    fn try_from(value: &crate::Schema) -> Result<Self> {
+        let ffi_schema = ffi::FFI_ArrowSchema::try_from(value.0.as_ref())?;
+        Ok(Self(Box::new(ffi_schema)))
+    }
+}
+
+#[cfg(feature = "field")]
+impl TryFrom<&crate::Field> for FFIArrowSchema {
+    type Error = crate::error::ArrowWasmError;
+
+    fn try_from(value: &crate::Field) -> Result<Self> {
+        let ffi_schema = ffi::FFI_ArrowSchema::try_from(value.0.as_ref())?;
+        Ok(Self(Box::new(ffi_schema)))
+    }
+}
+
+#[cfg(feature = "schema")]
+impl TryFrom<crate::Schema> for FFIArrowSchema {
+    type Error = crate::error::ArrowWasmError;
+
+    fn try_from(value: crate::Schema) -> Result<Self> {
         (&value).try_into()
     }
 }
 
-impl TryFrom<Field> for FFIArrowSchema {
+#[cfg(feature = "field")]
+impl TryFrom<crate::Field> for FFIArrowSchema {
     type Error = crate::error::ArrowWasmError;
 
-    fn try_from(value: Field) -> Result<Self> {
+    fn try_from(value: crate::Field) -> Result<Self> {
         (&value).try_into()
-    }
-}
-
-impl TryFrom<Arc<Schema>> for FFIArrowSchema {
-    type Error = crate::error::ArrowWasmError;
-
-    fn try_from(value: Arc<Schema>) -> Result<Self> {
-        value.as_ref().try_into()
-    }
-}
-
-impl TryFrom<Arc<Field>> for FFIArrowSchema {
-    type Error = crate::error::ArrowWasmError;
-
-    fn try_from(value: Arc<Field>) -> Result<Self> {
-        value.as_ref().try_into()
     }
 }
 

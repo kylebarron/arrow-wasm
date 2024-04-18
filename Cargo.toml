@@ -16,7 +16,16 @@ crate-type = ["cdylib", "rlib"]
 
 [features]
 default = ["all"]
-all = ["data", "data_type", "read_arrow_js", "table", "vector"]
+all = [
+    "data_type",
+    "data",
+    "field",
+    "read_arrow_js",
+    "record_batch",
+    "schema",
+    "table",
+    "vector",
+]
 
 # Include Data classes for contiguous Arrow memory
 data = []
@@ -24,8 +33,14 @@ data = []
 # Include DataType classes for contiguous Arrow memory
 data_type = []
 
+field = ["data_type"]
+
 # Include functionality to read Arrow JS objects directly.
 read_arrow_js = []
+
+record_batch = ["table"]
+
+schema = []
 
 # Include Table class
 table = []
@@ -33,7 +48,7 @@ table = []
 # Include Vector classes for chunked Arrow memory
 vector = []
 
-debug = ["console_error_panic_hook"]
+debug = ["dep:console_error_panic_hook"]
 
 [dependencies]
 wasm-bindgen = { version = "0.2.83", features = ["serde-serialize"] }
@@ -60,10 +75,13 @@ arrow = { version = "51", default-features = false, features = ["ffi", "ipc"] }
 serde = { version = "1.0", features = ["derive"] }
 serde-wasm-bindgen = "0.6"
 
-wasm-bindgen-futures = { version = "0.4.30", optional = true }
-
 [dev-dependencies]
 wasm-bindgen-test = "0.3.31"
+
+[package.metadata.cargo-all-features]
+
+# Exclude certain features from the build matrix
+denylist = ["read_arrow_js"]
 
 [profile.release]
 # Tell `rustc` to optimize for small code size.
