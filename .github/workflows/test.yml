@@ -26,9 +26,23 @@ jobs:
       - name: "clippy"
         run: cargo clippy --all --tests -- -D warnings
 
-      - name: "check"
-        run: cargo check --all
-
       - name: "test"
         run: |
           cargo test --all
+
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - uses: Swatinem/rust-cache@v2
+
+      - run: cargo install cargo-all-features
+
+      - name: Check all combinations of features can build
+        run: cargo check-all-features --target wasm32-unknown-unknown
