@@ -1,3 +1,4 @@
+use arrow::ipc::writer::StreamWriter;
 use std::collections::HashMap;
 use std::sync::Arc;
 use wasm_bindgen::prelude::*;
@@ -44,6 +45,23 @@ impl Schema {
     #[wasm_bindgen(js_name = intoFFI)]
     pub fn into_ffi(self) -> WasmResult<crate::ffi::FFIArrowSchema> {
         Ok(self.try_into()?)
+    }
+
+    /// Consume this schema and convert to an Arrow IPC Stream buffer
+    #[wasm_bindgen(js_name = intoIPCStream)]
+    pub fn into_ipc_stream(self) -> WasmResult<Vec<u8>> {
+        let mut output_file = Vec::new();
+
+        {
+            let mut writer = StreamWriter::try_new(&mut output_file, &self.0)?;
+
+            writer.finish()?;
+        }
+
+        // Note that this returns output_file directly instead of using
+        // writer.into_inner().to_vec() as the latter seems likely to incur an extra copy of the
+        // vec
+        Ok(output_file)
     }
 
     /// Returns an immutable reference of a specific [`Field`] instance selected using an
