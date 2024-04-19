@@ -27,9 +27,23 @@ pub struct Schema(pub(crate) arrow_schema::SchemaRef);
 #[wasm_bindgen]
 impl Schema {
     /// Export this schema to an FFIArrowSchema object, which can be read with arrow-js-ffi.
+    ///
+    /// This method **does not consume** the Schema, so you must remember to call {@linkcode
+    /// Schema.free} to release the resources. The underlying arrays are reference counted, so
+    /// this method does not copy data, it only prevents the data from being released.
     #[wasm_bindgen(js_name = toFFI)]
     pub fn to_ffi(&self) -> WasmResult<crate::ffi::FFIArrowSchema> {
-        Ok(crate::ffi::FFIArrowSchema::try_from(self)?)
+        Ok(self.try_into()?)
+    }
+
+    /// Export this Table to FFI structs according to the Arrow C Data Interface.
+    ///
+    /// This method **does consume** the Table, so the original Table will be
+    /// inaccessible after this call. You must still call {@linkcode FFITable.free} after
+    /// you've finished using the FFITable.
+    #[wasm_bindgen(js_name = intoFFI)]
+    pub fn into_ffi(self) -> WasmResult<crate::ffi::FFIArrowSchema> {
+        Ok(self.try_into()?)
     }
 
     /// Returns an immutable reference of a specific [`Field`] instance selected using an
