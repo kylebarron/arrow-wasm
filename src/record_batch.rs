@@ -108,6 +108,6 @@ impl From<RecordBatch> for FFIRecordBatch {
 
 impl From<&RecordBatch> for FFIRecordBatch {
     fn from(value: &RecordBatch) -> Self {
-        value.into()
+        value.0.clone().into()
     }
 }
