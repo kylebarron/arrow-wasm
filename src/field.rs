@@ -59,14 +59,14 @@ impl Field {
             DataType::Float32 => crate::datatype::Float32.into(),
             DataType::Float64 => crate::datatype::Float64.into(),
             DataType::Timestamp(unit, tz) => {
-                crate::datatype::Timestamp::new(unit.clone(), tz.clone()).into()
+                crate::datatype::Timestamp::new(*unit, tz.clone()).into()
             }
             DataType::Date32 => crate::datatype::Date32.into(),
             DataType::Date64 => crate::datatype::Date64.into(),
-            DataType::Time32(unit) => crate::datatype::Time32::new(unit.clone()).into(),
-            DataType::Time64(unit) => crate::datatype::Time64::new(unit.clone()).into(),
-            DataType::Duration(unit) => crate::datatype::Duration::new(unit.clone()).into(),
-            DataType::Interval(unit) => crate::datatype::Interval::new(unit.clone()).into(),
+            DataType::Time32(unit) => crate::datatype::Time32::new(*unit).into(),
+            DataType::Time64(unit) => crate::datatype::Time64::new(*unit).into(),
+            DataType::Duration(unit) => crate::datatype::Duration::new(*unit).into(),
+            DataType::Interval(unit) => crate::datatype::Interval::new(*unit).into(),
             DataType::Binary => crate::datatype::Binary.into(),
             DataType::FixedSizeBinary(size) => crate::datatype::FixedSizeBinary::new(*size).into(),
             DataType::LargeBinary => crate::datatype::LargeBinary.into(),
