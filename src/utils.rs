@@ -1,9 +1,9 @@
-#[cfg(feature = "console_error_panic_hook")]
+#[cfg(feature = "debug")]
 use wasm_bindgen::prelude::*;
 
 /// Call this function at least once during initialization to get better error
 // messages if the underlying Rust code ever panics (creates uncaught errors).
-#[cfg(feature = "console_error_panic_hook")]
+#[cfg(feature = "debug")]
 #[wasm_bindgen(js_name = setPanicHook)]
 pub fn set_panic_hook() {
     // When the `console_error_panic_hook` feature is enabled, we can call the

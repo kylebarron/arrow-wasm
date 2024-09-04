@@ -52,19 +52,19 @@ impl Table {
     ///
     /// @param index The positional index of the RecordBatch to retrieve.
     /// @returns a RecordBatch or `null` if out of range.
-    #[cfg(feature = "recordBatch")]
+    #[cfg(feature = "record_batch")]
     #[wasm_bindgen(js_name = recordBatch)]
-    pub fn record_batch(&self, index: usize) -> Option<RecordBatch> {
+    pub fn record_batch(&self, index: usize) -> Option<crate::RecordBatch> {
         let batch = self.batches.get(index)?;
-        Some(RecordBatch::new(batch.clone()))
+        Some(crate::RecordBatch::new(batch.clone()))
     }
 
-    #[cfg(feature = "recordBatch")]
+    #[cfg(feature = "record_batch")]
     #[wasm_bindgen(js_name = recordBatches)]
-    pub fn record_batches(&self, index: usize) -> Vec<RecordBatch> {
+    pub fn record_batches(&self) -> Vec<crate::RecordBatch> {
         self.batches
             .iter()
-            .map(|batch| RecordBatch::new(batch.clone()))
+            .map(|batch| crate::RecordBatch::new(batch.clone()))
             .collect()
     }
 
