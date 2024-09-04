@@ -1,5 +1,6 @@
 use crate::error::WasmResult;
-use crate::ffi::record_batch::FFIRecordBatch;
+use crate::ffi::FFIData;
+use crate::ArrowWasmError;
 use wasm_bindgen::prelude::*;
 
 /// A group of columns of equal length in WebAssembly memory with an associated {@linkcode Schema}.
@@ -43,8 +44,8 @@ impl RecordBatch {
     /// RecordBatch.free} to release the resources. The underlying arrays are reference counted, so
     /// this method does not copy data, it only prevents the data from being released.
     #[wasm_bindgen(js_name = toFFI)]
-    pub fn to_ffi(&self) -> WasmResult<FFIRecordBatch> {
-        Ok(self.into())
+    pub fn to_ffi(&self) -> WasmResult<FFIData> {
+        Ok((&self.0).try_into()?)
     }
 
     /// Export this RecordBatch to FFI structs according to the Arrow C Data Interface.
@@ -53,8 +54,8 @@ impl RecordBatch {
     /// inaccessible after this call. You must still call {@linkcode FFIRecordBatch.free} after
     /// you've finished using the FFIRecordBatch.
     #[wasm_bindgen(js_name = intoFFI)]
-    pub fn into_ffi(self) -> WasmResult<FFIRecordBatch> {
-        Ok(self.into())
+    pub fn into_ffi(self) -> WasmResult<FFIData> {
+        Ok((&self.0).try_into()?)
     }
 
     /// Consume this RecordBatch and convert to an Arrow IPC Stream buffer
@@ -100,14 +101,24 @@ impl From<RecordBatch> for arrow::record_batch::RecordBatch {
     }
 }
 
-impl From<RecordBatch> for FFIRecordBatch {
-    fn from(value: RecordBatch) -> Self {
-        value.0.into()
+impl TryFrom<RecordBatch> for FFIData {
+    type Error = ArrowWasmError;
+
+    fn try_from(value: RecordBatch) -> Result<Self, ArrowWasmError> {
+        (&value.0).try_into()
     }
 }
 
-impl From<&RecordBatch> for FFIRecordBatch {
-    fn from(value: &RecordBatch) -> Self {
-        value.0.clone().into()
+impl TryFrom<&RecordBatch> for FFIData {
+    type Error = ArrowWasmError;
+
+    fn try_from(value: &RecordBatch) -> Result<Self, ArrowWasmError> {
+        (&value.0).try_into()
+    }
+}
+
+impl AsRef<arrow::record_batch::RecordBatch> for RecordBatch {
+    fn as_ref(&self) -> &arrow::record_batch::RecordBatch {
+        &self.0
     }
 }

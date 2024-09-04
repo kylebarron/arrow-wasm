@@ -1,6 +1,5 @@
 use crate::error::WasmResult;
-use crate::ffi::table::FFITable;
-use crate::ffi::FFIArrowSchema;
+use crate::ffi::{FFISchema, FFIStream};
 use crate::ArrowWasmError;
 use arrow::array::{Array, StructArray};
 use arrow::ffi;
@@ -80,7 +79,7 @@ impl Table {
     /// Table.free} to release the resources. The underlying arrays are reference counted, so
     /// this method does not copy data, it only prevents the data from being released.
     #[wasm_bindgen(js_name = toFFI)]
-    pub fn to_ffi(&self) -> WasmResult<FFITable> {
+    pub fn to_ffi(&self) -> WasmResult<FFIStream> {
         Ok(self.try_into()?)
     }
 
@@ -90,8 +89,8 @@ impl Table {
     /// inaccessible after this call. You must still call {@linkcode FFITable.free} after
     /// you've finished using the FFITable.
     #[wasm_bindgen(js_name = intoFFI)]
-    pub fn into_ffi(self) -> WasmResult<FFITable> {
-        Ok(self.try_into()?)
+    pub fn into_ffi(self) -> WasmResult<FFIStream> {
+        Ok((&self).try_into()?)
     }
 
     /// Consume this table and convert to an Arrow IPC Stream buffer
@@ -141,37 +140,22 @@ impl Table {
     }
 }
 
-impl TryFrom<Table> for FFITable {
-    type Error = ArrowWasmError;
-
-    fn try_from(value: Table) -> Result<Self, Self::Error> {
-        let ffi_schema = ffi::FFI_ArrowSchema::try_from(value.schema.as_ref())?;
-        let ffi_schema = FFIArrowSchema::new(Box::new(ffi_schema));
-
-        let mut ffi_batches = Vec::with_capacity(value.num_batches());
-        for batch in value.batches.into_iter() {
-            ffi_batches
-                .push(ffi::FFI_ArrowArray::new(&StructArray::from(batch).into_data()).into());
-        }
-
-        Ok(Self::new(ffi_schema, ffi_batches))
-    }
-}
-
-impl TryFrom<&Table> for FFITable {
+impl TryFrom<&Table> for FFIStream {
     type Error = ArrowWasmError;
 
     fn try_from(value: &Table) -> Result<Self, Self::Error> {
-        let ffi_schema = ffi::FFI_ArrowSchema::try_from(value.schema.as_ref())?;
-        let ffi_schema = FFIArrowSchema::new(Box::new(ffi_schema));
+        let schema = FFISchema::from_arrow(value.schema.as_ref())?;
 
         let mut ffi_batches = Vec::with_capacity(value.num_batches());
         for batch in value.batches.iter() {
-            ffi_batches.push(
-                ffi::FFI_ArrowArray::new(&StructArray::from(batch.clone()).into_data()).into(),
-            );
+            ffi_batches.push(ffi::FFI_ArrowArray::new(
+                &StructArray::from(batch.clone()).into_data(),
+            ));
         }
 
-        Ok(Self::new(ffi_schema, ffi_batches))
+        Ok(Self {
+            field: schema,
+            arrays: ffi_batches,
+        })
     }
 }

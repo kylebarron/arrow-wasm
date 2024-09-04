@@ -1,35 +1,41 @@
-use crate::ffi::array::FFIArrowArray;
-use crate::ffi::schema::FFIArrowSchema;
 use arrow::ffi;
 use wasm_bindgen::convert::IntoWasmAbi;
 use wasm_bindgen::prelude::*;
 
-/// A representation of an Arrow Table in WebAssembly memory exposed as FFI-compatible
+use crate::ffi::FFISchema;
+
+/// A representation of an Arrow C Stream in WebAssembly memory exposed as FFI-compatible
 /// structs through the Arrow C Data Interface.
+///
+/// Unlike other Arrow implementations outside of JS, this always stores the "stream" fully
+/// materialized as a sequence of Arrow chunks.
 #[wasm_bindgen]
-pub struct FFITable {
-    schema: FFIArrowSchema,
-    batches: Vec<FFIArrowArray>,
+pub struct FFIStream {
+    pub(crate) field: FFISchema,
+    pub(crate) arrays: Vec<ffi::FFI_ArrowArray>,
 }
 
-impl FFITable {
-    pub fn new(schema: FFIArrowSchema, batches: Vec<FFIArrowArray>) -> Self {
-        Self { schema, batches }
+impl FFIStream {
+    pub fn new(field: Box<ffi::FFI_ArrowSchema>, arrays: Vec<ffi::FFI_ArrowArray>) -> Self {
+        Self {
+            field: FFISchema::new(field),
+            arrays,
+        }
     }
 }
 
 #[wasm_bindgen]
-impl FFITable {
-    /// Get the total number of record batches in the table
-    #[wasm_bindgen(js_name = numBatches)]
-    pub fn num_batches(&self) -> usize {
-        self.batches.len()
+impl FFIStream {
+    /// Get the total number of elements in this stream
+    #[wasm_bindgen(js_name = numArrays)]
+    pub fn num_arrays(&self) -> usize {
+        self.arrays.len()
     }
 
-    /// Get the pointer to one ArrowSchema FFI struct
+    /// Get the pointer to the ArrowSchema FFI struct
     #[wasm_bindgen(js_name = schemaAddr)]
     pub fn schema_addr(&self) -> *const ffi::FFI_ArrowSchema {
-        self.schema.addr()
+        self.field.addr()
     }
 
     /// Get the pointer to one ArrowArray FFI struct for a given chunk index and column index
@@ -68,20 +74,21 @@ impl FFITable {
     /// @returns number pointer to an ArrowArray FFI struct in Wasm memory
     #[wasm_bindgen(js_name = arrayAddr)]
     pub fn array_addr(&self, chunk: usize) -> *const ffi::FFI_ArrowArray {
-        self.batches[chunk].addr()
+        &self.arrays[chunk] as *const _
     }
 
     #[wasm_bindgen(js_name = arrayAddrs)]
     pub fn array_addrs(&self) -> Vec<u32> {
         // wasm-bindgen doesn't allow a Vec<*const ffi::FFI_ArrowArray> so we cast to u32
-        (0..self.num_batches())
-            .map(|chunk_idx| self.array_addr(chunk_idx).into_abi())
+        self.arrays
+            .iter()
+            .map(|array| (array as *const ffi::FFI_ArrowArray).into_abi())
             .collect()
     }
 
     #[wasm_bindgen]
     pub fn drop(self) {
-        drop(self.schema);
-        drop(self.batches);
+        drop(self.field);
+        drop(self.arrays);
     }
 }
