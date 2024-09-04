@@ -1,15 +1,18 @@
-use arrow::array::Array;
+use arrow::array::{Array, StructArray};
 use arrow::ffi;
+use arrow_schema::{ArrowError, Field};
 use wasm_bindgen::prelude::*;
 
 use crate::error::Result;
-use crate::ffi::{FFIArrowArray, FFIArrowSchema};
+use crate::ArrowWasmError;
 
-/// An Arrow array including associated field metadata.
+/// An Arrow array exported to FFI.
 ///
 /// Using [`arrow-js-ffi`](https://github.com/kylebarron/arrow-js-ffi), you can view or copy Arrow
 /// these objects to JavaScript.
 ///
+/// Note that this also includes an ArrowSchema C struct as well, so that extension type
+/// information can be maintained.
 
 // TODO: fix example
 // ```ts
@@ -36,19 +39,19 @@ use crate::ffi::{FFIArrowArray, FFIArrowSchema};
 // );
 // ```
 //
-// ## Memory management
-//
-// Note that this array will not be released automatically. You need to manually call `.free()` to
-// release memory.
+/// ## Memory management
+///
+/// Note that this array will not be released automatically. You need to manually call `.free()` to
+/// release memory.
 #[wasm_bindgen]
 pub struct FFIData {
-    array: FFIArrowArray,
-    field: FFIArrowSchema,
+    array: Box<ffi::FFI_ArrowArray>,
+    field: Box<ffi::FFI_ArrowSchema>,
 }
 
 impl FFIData {
-    pub fn from_raw(array: FFIArrowArray, field: FFIArrowSchema) -> Self {
-        Self { field, array }
+    pub fn new(array: Box<ffi::FFI_ArrowArray>, field: Box<ffi::FFI_ArrowSchema>) -> Self {
+        Self { array, field }
     }
 
     /// Construct an [FFIData] from an Arrow array and optionally a field.
@@ -57,14 +60,16 @@ impl FFIData {
     /// `Arc<dyn Array>` to this [`FFIData`] will infer a "default field" for the given data type.
     /// This is not sufficient for some Arrow data, such as with extension types, where custom
     /// field metadata is required.
-    pub fn from_arrow(array: &dyn Array, field: Option<impl Into<FFIArrowSchema>>) -> Result<Self> {
-        let (ffi_array, ffi_schema) = ffi::to_ffi(&array.to_data())?;
-        let ffi_schema = field
-            .map(|f| f.into())
-            .unwrap_or_else(|| Box::new(ffi_schema).into());
+    pub fn from_arrow(
+        array: &dyn Array,
+        field: impl TryInto<arrow::ffi::FFI_ArrowSchema, Error = ArrowError>,
+    ) -> Result<Self> {
+        let ffi_field: arrow::ffi::FFI_ArrowSchema = field.try_into()?;
+        let ffi_array = arrow::ffi::FFI_ArrowArray::new(&array.to_data());
+
         Ok(Self {
-            field: ffi_schema,
-            array: Box::new(ffi_array).into(),
+            array: Box::new(ffi_array),
+            field: Box::new(ffi_field),
         })
     }
 }
@@ -73,23 +78,82 @@ impl TryFrom<&dyn Array> for FFIData {
     type Error = crate::error::ArrowWasmError;
 
     fn try_from(value: &dyn Array) -> Result<Self> {
-        let (ffi_array, ffi_schema) = ffi::to_ffi(&value.to_data())?;
+        let ffi_field = ffi::FFI_ArrowSchema::try_from(value.data_type())?;
+        let ffi_array = ffi::FFI_ArrowArray::new(&value.to_data());
         Ok(Self {
-            field: Box::new(ffi_schema).into(),
-            array: Box::new(ffi_array).into(),
+            field: Box::new(ffi_field),
+            array: Box::new(ffi_array),
         })
+    }
+}
+
+impl TryFrom<&arrow::record_batch::RecordBatch> for FFIData {
+    type Error = ArrowWasmError;
+
+    fn try_from(
+        value: &arrow::record_batch::RecordBatch,
+    ) -> std::result::Result<Self, Self::Error> {
+        let field = Field::new_struct("", value.schema_ref().fields().clone(), false);
+        let data = StructArray::from(value.clone());
+        Self::from_arrow(&data, field)
     }
 }
 
 #[wasm_bindgen]
 impl FFIData {
-    #[wasm_bindgen(js_name = arrayAddr)]
+    /// Access the pointer to the
+    /// [`ArrowArray`](https://arrow.apache.org/docs/format/CDataInterface.html#structure-definitions)
+    /// struct. This can be viewed or copied (without serialization) to an Arrow JS `RecordBatch` by
+    /// using [`arrow-js-ffi`](https://github.com/kylebarron/arrow-js-ffi). You can access the
+    /// [`WebAssembly.Memory`](https://developer.mozilla.org/en-US/docs/WebAssembly/JavaScript_interface/Memory)
+    /// instance by using {@linkcode wasmMemory}.
+    ///
+    /// **Example**:
+    ///
+    /// ```ts
+    /// import { parseRecordBatch } from "arrow-js-ffi";
+    ///
+    /// const wasmRecordBatch: FFIRecordBatch = ...
+    /// const wasmMemory: WebAssembly.Memory = wasmMemory();
+    ///
+    /// // Pass `true` to copy arrays across the boundary instead of creating views.
+    /// const jsRecordBatch = parseRecordBatch(
+    ///   wasmMemory.buffer,
+    ///   wasmRecordBatch.arrayAddr(),
+    ///   wasmRecordBatch.schemaAddr(),
+    ///   true
+    /// );
+    /// ```
+    #[wasm_bindgen]
     pub fn array_addr(&self) -> *const ffi::FFI_ArrowArray {
-        self.array.addr()
+        self.array.as_ref() as *const _
     }
 
+    /// Access the pointer to the
+    /// [`ArrowSchema`](https://arrow.apache.org/docs/format/CDataInterface.html#structure-definitions)
+    /// struct. This can be viewed or copied (without serialization) to an Arrow JS `Field` by
+    /// using [`arrow-js-ffi`](https://github.com/kylebarron/arrow-js-ffi). You can access the
+    /// [`WebAssembly.Memory`](https://developer.mozilla.org/en-US/docs/WebAssembly/JavaScript_interface/Memory)
+    /// instance by using {@linkcode wasmMemory}.
+    ///
+    /// **Example**:
+    ///
+    /// ```ts
+    /// import { parseRecordBatch } from "arrow-js-ffi";
+    ///
+    /// const wasmRecordBatch: FFIRecordBatch = ...
+    /// const wasmMemory: WebAssembly.Memory = wasmMemory();
+    ///
+    /// // Pass `true` to copy arrays across the boundary instead of creating views.
+    /// const jsRecordBatch = parseRecordBatch(
+    ///   wasmMemory.buffer,
+    ///   wasmRecordBatch.arrayAddr(),
+    ///   wasmRecordBatch.schemaAddr(),
+    ///   true
+    /// );
+    /// ```
     #[wasm_bindgen]
     pub fn schema_addr(&self) -> *const ffi::FFI_ArrowSchema {
-        self.field.addr()
+        self.field.as_ref() as *const _
     }
 }

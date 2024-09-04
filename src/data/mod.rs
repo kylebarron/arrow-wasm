@@ -1,67 +1,59 @@
-mod datatype;
 mod typed_array;
 
+use std::sync::Arc;
+
 use crate::error::WasmResult;
-use crate::ffi::FFIArrowArray;
-use arrow::array::Array;
+use crate::ffi::FFIData;
+use arrow::array::{make_array, Array, ArrayRef};
+use arrow_schema::{Field, FieldRef};
 use wasm_bindgen::prelude::*;
 
-macro_rules! impl_data {
-    ($struct_name:ident, $arrow_type:ty) => {
-        #[wasm_bindgen]
-        pub struct $struct_name($arrow_type);
-
-        #[wasm_bindgen]
-        impl $struct_name {
-            #[wasm_bindgen]
-            pub fn to_ffi(&self) -> WasmResult<FFIArrowArray> {
-                let array_data = self.0.to_data();
-                let (ffi_arr, _ffi_schema) = arrow::ffi::to_ffi(&array_data)?;
-                Ok(ffi_arr.into())
-            }
-        }
-
-        impl $struct_name {
-            pub fn new(arr: $arrow_type) -> Self {
-                Self(arr)
-            }
-        }
-
-        impl From<$struct_name> for $arrow_type {
-            fn from(value: $struct_name) -> Self {
-                value.0
-            }
-        }
-
-        impl From<$arrow_type> for $struct_name {
-            fn from(value: $arrow_type) -> Self {
-                Self(value)
-            }
-        }
-
-        impl AsRef<$arrow_type> for $struct_name {
-            fn as_ref(&self) -> &$arrow_type {
-                &self.0
-            }
-        }
-    };
+/// A representation of an Arrow `Data` instance in WebAssembly memory.
+///
+/// This has the same underlying representation as an Arrow JS `Data` object.
+#[wasm_bindgen]
+pub struct Data {
+    array: ArrayRef,
+    field: FieldRef,
 }
 
-impl_data!(BooleanData, arrow::array::BooleanArray);
-impl_data!(Uint8Data, arrow::array::UInt8Array);
-impl_data!(Uint16Data, arrow::array::UInt16Array);
-impl_data!(Uint32Data, arrow::array::UInt32Array);
-impl_data!(Uint64Data, arrow::array::UInt64Array);
-impl_data!(Int8Data, arrow::array::Int8Array);
-impl_data!(Int16Data, arrow::array::Int16Array);
-impl_data!(Int32Data, arrow::array::Int32Array);
-impl_data!(Int64Data, arrow::array::Int64Array);
-impl_data!(Float32Data, arrow::array::Float32Array);
-impl_data!(Float64Data, arrow::array::Float64Array);
+#[wasm_bindgen]
+impl Data {
+    /// Export this to FFI.
+    #[wasm_bindgen]
+    pub fn to_ffi(&self) -> WasmResult<FFIData> {
+        let ffi_schema = arrow::ffi::FFI_ArrowSchema::try_from(&self.field)?;
+        let ffi_array = arrow::ffi::FFI_ArrowArray::new(&self.array.to_data());
+        Ok(FFIData::new(Box::new(ffi_array), Box::new(ffi_schema)))
+    }
+}
 
-impl_data!(Utf8Data, arrow::array::StringArray);
-impl_data!(LargeUtf8Data, arrow::array::LargeStringArray);
-impl_data!(ListData, arrow::array::ListArray);
-impl_data!(LargeListData, arrow::array::LargeListArray);
-impl_data!(BinaryData, arrow::array::BinaryArray);
-impl_data!(LargeBinaryData, arrow::array::LargeBinaryArray);
+impl Data {
+    pub fn new(array: ArrayRef, field: FieldRef) -> Self {
+        assert_eq!(array.data_type(), field.data_type());
+        Self { array, field }
+    }
+
+    pub fn from_array<A: Array>(array: A) -> Self {
+        let array = make_array(array.into_data());
+        Self::from_array_ref(array)
+    }
+
+    /// Create a new Data from an [ArrayRef], inferring its data type automatically.
+    pub fn from_array_ref(array: ArrayRef) -> Self {
+        let field = Field::new("", array.data_type().clone(), true);
+        Self::new(array, Arc::new(field))
+    }
+}
+
+impl From<ArrayRef> for Data {
+    fn from(array: ArrayRef) -> Self {
+        Self::from_array_ref(array)
+    }
+}
+
+impl AsRef<ArrayRef> for Data {
+    fn as_ref(&self) -> &ArrayRef {
+        &self.array
+    }
+}

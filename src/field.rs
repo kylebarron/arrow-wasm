@@ -21,10 +21,10 @@ pub struct Field(pub(crate) arrow_schema::FieldRef);
 
 #[wasm_bindgen]
 impl Field {
-    /// Export this field to an `FFIArrowSchema`` object, which can be read with arrow-js-ffi.
+    /// Export this field to an `FFISchema`` object, which can be read with arrow-js-ffi.
     #[wasm_bindgen(js_name = toFFI)]
-    pub fn to_ffi(&self) -> WasmResult<crate::ffi::FFIArrowSchema> {
-        Ok(crate::ffi::FFIArrowSchema::try_from(self)?)
+    pub fn to_ffi(&self) -> WasmResult<crate::ffi::FFISchema> {
+        Ok(crate::ffi::FFISchema::try_from(self)?)
     }
 
     /// Returns the `Field`'s name.
@@ -146,5 +146,11 @@ impl From<arrow_schema::FieldRef> for Field {
 impl From<&arrow_schema::FieldRef> for Field {
     fn from(value: &arrow_schema::FieldRef) -> Self {
         Self(value.clone())
+    }
+}
+
+impl AsRef<arrow_schema::Field> for Field {
+    fn as_ref(&self) -> &arrow_schema::Field {
+        &self.0
     }
 }

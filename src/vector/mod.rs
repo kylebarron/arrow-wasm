@@ -1,51 +1,67 @@
+use std::sync::Arc;
+
+use arrow::array::ArrayRef;
+use arrow_schema::{ArrowError, DataType, Field, FieldRef};
 use wasm_bindgen::prelude::*;
 
-macro_rules! impl_vector {
-    ($struct_name:ident, $arrow_type:ty) => {
-        #[wasm_bindgen]
-        pub struct $struct_name(Vec<$arrow_type>);
+use crate::error::Result;
+use crate::ArrowWasmError;
 
-        impl $struct_name {
-            pub fn new(chunked_arr: Vec<$arrow_type>) -> Self {
-                Self(chunked_arr)
-            }
-        }
-
-        impl From<$struct_name> for Vec<$arrow_type> {
-            fn from(value: $struct_name) -> Self {
-                value.0
-            }
-        }
-
-        impl From<Vec<$arrow_type>> for $struct_name {
-            fn from(value: Vec<$arrow_type>) -> Self {
-                Self(value)
-            }
-        }
-
-        impl AsRef<[$arrow_type]> for $struct_name {
-            fn as_ref(&self) -> &[$arrow_type] {
-                self.0.as_slice()
-            }
-        }
-    };
+#[wasm_bindgen]
+pub struct Vector {
+    chunks: Vec<ArrayRef>,
+    field: FieldRef,
 }
 
-impl_vector!(BooleanVector, arrow::array::BooleanArray);
-impl_vector!(Uint8Vector, arrow::array::UInt8Array);
-impl_vector!(Uint16Vector, arrow::array::UInt16Array);
-impl_vector!(Uint32Vector, arrow::array::UInt32Array);
-impl_vector!(Uint64Vector, arrow::array::UInt64Array);
-impl_vector!(Int8Vector, arrow::array::Int8Array);
-impl_vector!(Int16Vector, arrow::array::Int16Array);
-impl_vector!(Int32Vector, arrow::array::Int32Array);
-impl_vector!(Int64Vector, arrow::array::Int64Array);
-impl_vector!(Float32Vector, arrow::array::Float32Array);
-impl_vector!(Float64Vector, arrow::array::Float64Array);
+impl Vector {
+    pub fn try_new(chunks: Vec<ArrayRef>, field: FieldRef) -> Result<Self> {
+        if !chunks
+            .iter()
+            .all(|chunk| chunk.data_type().equals_datatype(field.data_type()))
+        {
+            return Err(ArrowWasmError::InternalError(
+                "All chunks must have same data type".to_string(),
+            ));
+        }
+        Ok(Self { chunks, field })
+    }
 
-impl_vector!(Utf8Vector, arrow::array::StringArray);
-impl_vector!(LargeUtf8Vector, arrow::array::LargeStringArray);
-impl_vector!(ListVector, arrow::array::ListArray);
-impl_vector!(LargeListVector, arrow::array::LargeListArray);
-impl_vector!(BinaryVector, arrow::array::BinaryArray);
-impl_vector!(LargeBinaryVector, arrow::array::LargeBinaryArray);
+    pub fn data_type(&self) -> &DataType {
+        self.field.data_type()
+    }
+
+    /// Create a new PyChunkedArray from a vec of [ArrayRef]s, inferring their data type
+    /// automatically.
+    pub fn from_array_refs(chunks: Vec<ArrayRef>) -> Result<Self> {
+        if chunks.is_empty() {
+            return Err(ArrowError::SchemaError(
+                "Cannot infer data type from empty Vec<ArrayRef>".to_string(),
+            )
+            .into());
+        }
+
+        if !chunks
+            .windows(2)
+            .all(|w| w[0].data_type() == w[1].data_type())
+        {
+            return Err(ArrowError::SchemaError("Mismatched data types".to_string()).into());
+        }
+
+        let field = Field::new("", chunks.first().unwrap().data_type().clone(), true);
+        Self::try_new(chunks, Arc::new(field))
+    }
+}
+
+impl TryFrom<Vec<ArrayRef>> for Vector {
+    type Error = ArrowWasmError;
+
+    fn try_from(value: Vec<ArrayRef>) -> Result<Self> {
+        Self::from_array_refs(value)
+    }
+}
+
+impl AsRef<[ArrayRef]> for Vector {
+    fn as_ref(&self) -> &[ArrayRef] {
+        &self.chunks
+    }
+}

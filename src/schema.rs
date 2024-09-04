@@ -4,6 +4,7 @@ use std::sync::Arc;
 use wasm_bindgen::prelude::*;
 
 use crate::error::WasmResult;
+use crate::ffi::FFISchema;
 
 #[wasm_bindgen(typescript_custom_section)]
 const TS_SchemaMetadata: &'static str = r#"
@@ -27,14 +28,14 @@ pub struct Schema(pub(crate) arrow_schema::SchemaRef);
 
 #[wasm_bindgen]
 impl Schema {
-    /// Export this schema to an FFIArrowSchema object, which can be read with arrow-js-ffi.
+    /// Export this schema to an FFISchema object, which can be read with arrow-js-ffi.
     ///
     /// This method **does not consume** the Schema, so you must remember to call {@linkcode
     /// Schema.free} to release the resources. The underlying arrays are reference counted, so
     /// this method does not copy data, it only prevents the data from being released.
     #[wasm_bindgen(js_name = toFFI)]
-    pub fn to_ffi(&self) -> WasmResult<crate::ffi::FFIArrowSchema> {
-        Ok(self.try_into()?)
+    pub fn to_ffi(&self) -> WasmResult<FFISchema> {
+        Ok(FFISchema::from_arrow(self.0.as_ref())?)
     }
 
     /// Export this Table to FFI structs according to the Arrow C Data Interface.
@@ -43,8 +44,8 @@ impl Schema {
     /// inaccessible after this call. You must still call {@linkcode FFITable.free} after
     /// you've finished using the FFITable.
     #[wasm_bindgen(js_name = intoFFI)]
-    pub fn into_ffi(self) -> WasmResult<crate::ffi::FFIArrowSchema> {
-        Ok(self.try_into()?)
+    pub fn into_ffi(self) -> WasmResult<FFISchema> {
+        Ok(FFISchema::from_arrow(self.0.as_ref())?)
     }
 
     /// Consume this schema and convert to an Arrow IPC Stream buffer
@@ -129,8 +130,8 @@ impl From<Schema> for arrow_schema::SchemaRef {
     }
 }
 
-impl From<Schema> for arrow_schema::Schema {
-    fn from(value: Schema) -> Self {
-        value.0.as_ref().clone()
+impl AsRef<arrow_schema::Schema> for Schema {
+    fn as_ref(&self) -> &arrow_schema::Schema {
+        &self.0
     }
 }
