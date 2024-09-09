@@ -62,7 +62,7 @@ fn copy_null_bitmap(js_data: &JSData) -> Option<Buffer> {
         if buf.is_empty() {
             None
         } else {
-            Some(buf.into())
+            Some(Buffer::from_vec(buf))
         }
     })
 }
@@ -73,7 +73,7 @@ fn copy_typed_array_like(arr: &TypedArrayLike) -> Buffer {
         arr.byte_offset(),
         arr.byte_length(),
     );
-    uint8_view.to_vec().into()
+    Buffer::from_vec(uint8_view.to_vec())
 }
 
 fn copy_values(js_data: &JSData) -> Buffer {
