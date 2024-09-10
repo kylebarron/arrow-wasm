@@ -124,7 +124,7 @@ impl FFIData {
     ///   true
     /// );
     /// ```
-    #[wasm_bindgen]
+    #[wasm_bindgen(js_name = arrayAddr)]
     pub fn array_addr(&self) -> *const ffi::FFI_ArrowArray {
         self.array.as_ref() as *const _
     }
@@ -152,7 +152,7 @@ impl FFIData {
     ///   true
     /// );
     /// ```
-    #[wasm_bindgen]
+    #[wasm_bindgen(js_name = schemaAddr)]
     pub fn schema_addr(&self) -> *const ffi::FFI_ArrowSchema {
         self.field.as_ref() as *const _
     }
