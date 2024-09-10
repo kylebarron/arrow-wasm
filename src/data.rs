@@ -25,7 +25,7 @@ pub struct Data {
 #[wasm_bindgen]
 impl Data {
     /// Export this to FFI.
-    #[wasm_bindgen]
+    #[wasm_bindgen(js_name = toFFI)]
     pub fn to_ffi(&self) -> WasmResult<FFIData> {
         let ffi_schema = arrow::ffi::FFI_ArrowSchema::try_from(&self.field)?;
         let ffi_array = arrow::ffi::FFI_ArrowArray::new(&self.array.to_data());
@@ -36,7 +36,7 @@ impl Data {
     ///
     /// This will silently ignore any null values. This will error on non-primitive data types for
     /// which a TypedArray does not exist in JavaScript.
-    #[wasm_bindgen]
+    #[wasm_bindgen(js_name = toTypedArray)]
     pub fn to_typed_array(&self) -> WasmResult<JsValue> {
         macro_rules! impl_to_typed_array {
             ($arrow_type:ty, $js_array:ty) => {{
