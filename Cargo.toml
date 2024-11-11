@@ -67,7 +67,7 @@ console_error_panic_hook = { version = "0.1.6", optional = true }
 
 js-sys = "0.3.72"
 getrandom = { version = "0.2.15", features = ["js"] }
-thiserror = "1.0"
+thiserror = "2.0"
 
 arrow-schema = ">=52"
 arrow = { version = ">=52", default-features = false, features = [
