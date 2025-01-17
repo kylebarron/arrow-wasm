@@ -13,7 +13,6 @@ use crate::ArrowWasmError;
 ///
 /// Note that this also includes an ArrowSchema C struct as well, so that extension type
 /// information can be maintained.
-
 // TODO: fix example
 // ```ts
 // import { parseField, parseVector } from "arrow-js-ffi";
