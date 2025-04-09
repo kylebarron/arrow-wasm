@@ -33,9 +33,8 @@ dependencies = [
 
 [[package]]
 name = "arrow-array"
-version = "54.3.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a12fcdb3f1d03f69d3ec26ac67645a8fe3f878d77b5ebb0b15d64a116c212985"
+version = "55.0.0"
+source = "git+https://github.com/apache/arrow-rs?rev=9322547590ab32efeff8c0486e4a3a2cb5887a26#9322547590ab32efeff8c0486e4a3a2cb5887a26"
 dependencies = [
  "ahash",
  "arrow-buffer",
@@ -49,9 +48,8 @@ dependencies = [
 
 [[package]]
 name = "arrow-buffer"
-version = "54.3.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "263f4801ff1839ef53ebd06f99a56cecd1dbaf314ec893d93168e2e860e0291c"
+version = "55.0.0"
+source = "git+https://github.com/apache/arrow-rs?rev=9322547590ab32efeff8c0486e4a3a2cb5887a26#9322547590ab32efeff8c0486e4a3a2cb5887a26"
 dependencies = [
  "bytes",
  "half",
@@ -60,9 +58,8 @@ dependencies = [
 
 [[package]]
 name = "arrow-data"
-version = "54.3.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "61cfdd7d99b4ff618f167e548b2411e5dd2c98c0ddebedd7df433d34c20a4429"
+version = "55.0.0"
+source = "git+https://github.com/apache/arrow-rs?rev=9322547590ab32efeff8c0486e4a3a2cb5887a26#9322547590ab32efeff8c0486e4a3a2cb5887a26"
 dependencies = [
  "arrow-buffer",
  "arrow-schema",
@@ -72,9 +69,8 @@ dependencies = [
 
 [[package]]
 name = "arrow-ipc"
-version = "54.3.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "62ff528658b521e33905334723b795ee56b393dbe9cf76c8b1f64b648c65a60c"
+version = "55.0.0"
+source = "git+https://github.com/apache/arrow-rs?rev=9322547590ab32efeff8c0486e4a3a2cb5887a26#9322547590ab32efeff8c0486e4a3a2cb5887a26"
 dependencies = [
  "arrow-array",
  "arrow-buffer",
@@ -85,11 +81,10 @@ dependencies = [
 
 [[package]]
 name = "arrow-schema"
-version = "54.3.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "39cfaf5e440be44db5413b75b72c2a87c1f8f0627117d110264048f2969b99e9"
+version = "55.0.0"
+source = "git+https://github.com/apache/arrow-rs?rev=9322547590ab32efeff8c0486e4a3a2cb5887a26#9322547590ab32efeff8c0486e4a3a2cb5887a26"
 dependencies = [
- "bitflags 2.9.0",
+ "bitflags",
 ]
 
 [[package]]
@@ -116,12 +111,6 @@ name = "autocfg"
 version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ace50bade8e6234aa140d9a2f552bbee1db4d353f69b8217bc503490fc1a9f26"
-
-[[package]]
-name = "bitflags"
-version = "1.3.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bef38d45163c2f1dde094a7dfd33ccf595c92905c8f8f4fdc18d06fb1037718a"
 
 [[package]]
 name = "bitflags"
@@ -212,11 +201,11 @@ checksum = "43da5946c66ffcc7745f48db692ffbb10a83bfe0afd96235c5c2a4fb23994929"
 
 [[package]]
 name = "flatbuffers"
-version = "24.12.23"
+version = "25.2.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4f1baf0dbf96932ec9a3038d57900329c015b0bfb7b63d904f3bc27e2b02a096"
+checksum = "1045398c1bfd89168b5fd3f1fc11f6e70b34f6f66300c87d44d3de849463abf1"
 dependencies = [
- "bitflags 1.3.2",
+ "bitflags",
  "rustc_version",
 ]
 
