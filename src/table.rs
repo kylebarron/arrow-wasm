@@ -1,10 +1,10 @@
 use crate::error::WasmResult;
 use crate::ffi::{FFISchema, FFIStream};
 use crate::ArrowWasmError;
-use arrow::array::{Array, StructArray};
-use arrow::ffi;
-use arrow::ipc::reader::StreamReader;
-use arrow::ipc::writer::StreamWriter;
+use arrow_array::ffi;
+use arrow_array::{Array, StructArray};
+use arrow_ipc::reader::StreamReader;
+use arrow_ipc::writer::StreamWriter;
 use std::io::Cursor;
 use wasm_bindgen::prelude::*;
 
@@ -16,24 +16,16 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 pub struct Table {
     schema: arrow_schema::SchemaRef,
-    batches: Vec<arrow::record_batch::RecordBatch>,
+    batches: Vec<arrow_array::RecordBatch>,
 }
 
 impl Table {
-    pub fn new(
-        schema: arrow_schema::SchemaRef,
-        batches: Vec<arrow::record_batch::RecordBatch>,
-    ) -> Self {
+    pub fn new(schema: arrow_schema::SchemaRef, batches: Vec<arrow_array::RecordBatch>) -> Self {
         Self { schema, batches }
     }
 
     /// Consume this table and return its components
-    pub fn into_inner(
-        self,
-    ) -> (
-        arrow_schema::SchemaRef,
-        Vec<arrow::record_batch::RecordBatch>,
-    ) {
+    pub fn into_inner(self) -> (arrow_schema::SchemaRef, Vec<arrow_array::RecordBatch>) {
         (self.schema, self.batches)
     }
 }

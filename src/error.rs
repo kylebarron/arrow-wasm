@@ -1,4 +1,4 @@
-use arrow::error::ArrowError;
+use arrow_schema::ArrowError;
 use thiserror::Error;
 use wasm_bindgen::JsError;
 

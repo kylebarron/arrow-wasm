@@ -1,4 +1,4 @@
-use arrow::ffi;
+use arrow_array::ffi;
 use wasm_bindgen::convert::IntoWasmAbi;
 use wasm_bindgen::prelude::*;
 

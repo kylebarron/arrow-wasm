@@ -1,4 +1,4 @@
-use arrow::ffi;
+use arrow_array::ffi;
 use arrow_schema::ArrowError;
 use wasm_bindgen::prelude::*;
 
@@ -19,9 +19,9 @@ impl FFISchema {
     /// This is not sufficient for some Arrow data, such as with extension types, where custom
     /// field metadata is required.
     pub fn from_arrow(
-        field: impl TryInto<arrow::ffi::FFI_ArrowSchema, Error = ArrowError>,
+        field: impl TryInto<arrow_array::ffi::FFI_ArrowSchema, Error = ArrowError>,
     ) -> Result<Self> {
-        let ffi_field: arrow::ffi::FFI_ArrowSchema = field.try_into()?;
+        let ffi_field: arrow_array::ffi::FFI_ArrowSchema = field.try_into()?;
         Ok(Self::new(Box::new(ffi_field)))
     }
 }

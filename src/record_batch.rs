@@ -5,14 +5,14 @@ use wasm_bindgen::prelude::*;
 
 /// A group of columns of equal length in WebAssembly memory with an associated {@linkcode Schema}.
 #[wasm_bindgen]
-pub struct RecordBatch(arrow::record_batch::RecordBatch);
+pub struct RecordBatch(arrow_array::RecordBatch);
 
 impl RecordBatch {
-    pub fn new(batch: arrow::record_batch::RecordBatch) -> Self {
+    pub fn new(batch: arrow_array::RecordBatch) -> Self {
         Self(batch)
     }
 
-    pub fn into_inner(self) -> arrow::record_batch::RecordBatch {
+    pub fn into_inner(self) -> arrow_array::RecordBatch {
         self.0
     }
 }
@@ -89,13 +89,13 @@ impl RecordBatch {
     }
 }
 
-impl From<arrow::record_batch::RecordBatch> for RecordBatch {
-    fn from(value: arrow::record_batch::RecordBatch) -> Self {
+impl From<arrow_array::RecordBatch> for RecordBatch {
+    fn from(value: arrow_array::RecordBatch) -> Self {
         Self(value)
     }
 }
 
-impl From<RecordBatch> for arrow::record_batch::RecordBatch {
+impl From<RecordBatch> for arrow_array::RecordBatch {
     fn from(value: RecordBatch) -> Self {
         value.0
     }
@@ -117,8 +117,8 @@ impl TryFrom<&RecordBatch> for FFIData {
     }
 }
 
-impl AsRef<arrow::record_batch::RecordBatch> for RecordBatch {
-    fn as_ref(&self) -> &arrow::record_batch::RecordBatch {
+impl AsRef<arrow_array::RecordBatch> for RecordBatch {
+    fn as_ref(&self) -> &arrow_array::RecordBatch {
         &self.0
     }
 }

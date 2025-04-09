@@ -1,7 +1,8 @@
 use std::sync::Arc;
 
 use crate::error::WasmResult;
-use arrow::array::{make_array, AsArray};
+use arrow_array::cast::AsArray;
+use arrow_array::make_array;
 use arrow_schema::SchemaRef;
 // use arrow::record_batch::RecordBatch;
 use crate::record_batch::RecordBatch;
@@ -29,10 +30,8 @@ impl RecordBatch {
         let dyn_arr = make_array(data);
         let struct_arr = dyn_arr.as_struct();
 
-        let batch = arrow::record_batch::RecordBatch::try_new(
-            Arc::new(schema),
-            struct_arr.columns().to_vec(),
-        )?;
+        let batch =
+            arrow_array::RecordBatch::try_new(Arc::new(schema), struct_arr.columns().to_vec())?;
         Ok(RecordBatch::new(batch))
     }
 
@@ -44,8 +43,7 @@ impl RecordBatch {
         let dyn_arr = make_array(data);
         let struct_arr = dyn_arr.as_struct();
 
-        let batch =
-            arrow::record_batch::RecordBatch::try_new(schema, struct_arr.columns().to_vec())?;
+        let batch = arrow_array::RecordBatch::try_new(schema, struct_arr.columns().to_vec())?;
         Ok(RecordBatch::new(batch))
     }
 }

@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use arrow::array::ArrayRef;
+use arrow_array::ArrayRef;
 use arrow_schema::{ArrowError, DataType, Field, FieldRef};
 use wasm_bindgen::prelude::*;
 

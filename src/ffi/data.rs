@@ -1,5 +1,4 @@
-use arrow::array::{Array, StructArray};
-use arrow::ffi;
+use arrow_array::{ffi, Array, StructArray};
 use arrow_schema::{ArrowError, Field};
 use wasm_bindgen::prelude::*;
 
@@ -61,10 +60,10 @@ impl FFIData {
     /// field metadata is required.
     pub fn from_arrow(
         array: &dyn Array,
-        field: impl TryInto<arrow::ffi::FFI_ArrowSchema, Error = ArrowError>,
+        field: impl TryInto<arrow_array::ffi::FFI_ArrowSchema, Error = ArrowError>,
     ) -> Result<Self> {
-        let ffi_field: arrow::ffi::FFI_ArrowSchema = field.try_into()?;
-        let ffi_array = arrow::ffi::FFI_ArrowArray::new(&array.to_data());
+        let ffi_field: arrow_array::ffi::FFI_ArrowSchema = field.try_into()?;
+        let ffi_array = arrow_array::ffi::FFI_ArrowArray::new(&array.to_data());
 
         Ok(Self {
             array: Box::new(ffi_array),
@@ -86,12 +85,10 @@ impl TryFrom<&dyn Array> for FFIData {
     }
 }
 
-impl TryFrom<&arrow::record_batch::RecordBatch> for FFIData {
+impl TryFrom<&arrow_array::RecordBatch> for FFIData {
     type Error = ArrowWasmError;
 
-    fn try_from(
-        value: &arrow::record_batch::RecordBatch,
-    ) -> std::result::Result<Self, Self::Error> {
+    fn try_from(value: &arrow_array::RecordBatch) -> std::result::Result<Self, Self::Error> {
         let field = Field::new_struct("", value.schema_ref().fields().clone(), false);
         let data = StructArray::from(value.clone());
         Self::from_arrow(&data, field)
