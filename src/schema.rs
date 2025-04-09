@@ -1,4 +1,4 @@
-use arrow::ipc::writer::StreamWriter;
+use arrow_ipc::writer::StreamWriter;
 use std::collections::HashMap;
 use std::sync::Arc;
 use wasm_bindgen::prelude::*;

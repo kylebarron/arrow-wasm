@@ -1,11 +1,11 @@
 use std::sync::Arc;
 
-use arrow::array::AsArray;
-use arrow::array::{make_array, Array, ArrayRef};
-use arrow::datatypes::{
+use arrow_array::cast::AsArray;
+use arrow_array::types::{
     Float32Type, Float64Type, Int16Type, Int32Type, Int64Type, Int8Type, UInt16Type, UInt32Type,
     UInt64Type, UInt8Type,
 };
+use arrow_array::{make_array, Array, ArrayRef};
 use arrow_schema::DataType;
 use arrow_schema::{Field, FieldRef};
 use wasm_bindgen::prelude::*;
@@ -27,8 +27,8 @@ impl Data {
     /// Export this to FFI.
     #[wasm_bindgen(js_name = toFFI)]
     pub fn to_ffi(&self) -> WasmResult<FFIData> {
-        let ffi_schema = arrow::ffi::FFI_ArrowSchema::try_from(&self.field)?;
-        let ffi_array = arrow::ffi::FFI_ArrowArray::new(&self.array.to_data());
+        let ffi_schema = arrow_array::ffi::FFI_ArrowSchema::try_from(&self.field)?;
+        let ffi_array = arrow_array::ffi::FFI_ArrowArray::new(&self.array.to_data());
         Ok(FFIData::new(Box::new(ffi_array), Box::new(ffi_schema)))
     }
 

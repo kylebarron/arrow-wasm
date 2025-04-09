@@ -1,5 +1,5 @@
-use arrow::array::*;
-use arrow::buffer::Buffer;
+use arrow_buffer::Buffer;
+use arrow_data::ArrayData;
 use arrow_schema::DataType;
 use wasm_bindgen::prelude::*;
 
