@@ -20,6 +20,23 @@ pub struct Table {
 }
 
 impl Table {
+    /// Creates a new Table.
+    ///
+    /// # Alternatives
+    ///
+    /// If you're creating a function that takes in a generic Javascript arrow
+    /// table, use [JSTable](crate::arrow_js::table::JSTable) and [Table::from_js](Table::from_js).
+    ///
+    /// ```
+    /// use wasm_bindgen::prelude::*;
+    /// use arrow_wasm::{Table, arrow_js::table::JSTable};
+    ///
+    /// #[wasm_bindgen]
+    /// pub fn convert(table: JSTable) -> WasmResult<()> {
+    ///     let table = Table::from_js(table)?;
+    ///     // Do something with the table
+    /// }
+    /// ```
     pub fn new(schema: arrow_schema::SchemaRef, batches: Vec<arrow_array::RecordBatch>) -> Self {
         Self { schema, batches }
     }
