@@ -20,6 +20,7 @@ extern "C" {
 }
 
 impl Table {
+    /// Creates a table from a JSTable.
     pub fn from_js(js_table: &JSTable) -> WasmResult<Table> {
         let schema = Arc::new(import_schema(&js_table.schema()));
         let batches = js_table
