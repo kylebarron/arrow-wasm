@@ -29,12 +29,13 @@ impl Table {
     ///
     /// ```
     /// use wasm_bindgen::prelude::*;
-    /// use arrow_wasm::{Table, arrow_js::table::JSTable};
+    /// use arrow_wasm::{Table, arrow_js::table::JSTable, error::WasmResult};
     ///
     /// #[wasm_bindgen]
-    /// pub fn convert(table: JSTable) -> WasmResult<()> {
+    /// pub fn convert(table: &JSTable) -> WasmResult<()> {
     ///     let table = Table::from_js(table)?;
     ///     // Do something with the table
+    ///     Ok(())
     /// }
     /// ```
     pub fn new(schema: arrow_schema::SchemaRef, batches: Vec<arrow_array::RecordBatch>) -> Self {
