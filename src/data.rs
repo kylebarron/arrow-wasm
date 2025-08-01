@@ -56,9 +56,7 @@ impl Data {
             DataType::Int64 => impl_to_typed_array!(Int64Type, js_sys::BigInt64Array),
             DataType::Float32 => impl_to_typed_array!(Float32Type, js_sys::Float32Array),
             DataType::Float64 => impl_to_typed_array!(Float64Type, js_sys::Float64Array),
-            dt => {
-                Err(ArrowWasmError::InternalError(format!("Unexpected data type: {}", dt)).into())
-            }
+            dt => Err(ArrowWasmError::InternalError(format!("Unexpected data type: {dt}")).into()),
         }
     }
 }
