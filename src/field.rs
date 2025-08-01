@@ -98,7 +98,7 @@ impl Field {
             }
             dt => {
                 return Err(JsError::new(
-                    format!("data type not yet supported: {}", dt).as_str(),
+                    format!("data type not yet supported: {dt}").as_str(),
                 ))
             }
         };
