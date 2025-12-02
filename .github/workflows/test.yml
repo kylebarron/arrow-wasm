@@ -45,4 +45,4 @@ jobs:
       - run: cargo install cargo-all-features
 
       - name: Check all combinations of features can build
-        run: cargo check-all-features --target wasm32-unknown-unknown
+        run: cargo all-features check --target wasm32-unknown-unknown
