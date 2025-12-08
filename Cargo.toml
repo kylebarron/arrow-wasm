@@ -66,7 +66,7 @@ console_error_panic_hook = { version = "0.1.6", optional = true }
 # wee_alloc = "0.4.5"
 
 js-sys = "0.3.77"
-getrandom = { version = "0.2.15", features = ["js"] }
+getrandom = { version = "0.2.16", features = ["js"] }
 thiserror = "2.0"
 
 arrow-array = { version = "57", features = ["ffi"] }
