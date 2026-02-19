@@ -292,8 +292,14 @@ mod tests {
     use super::*;
     use arrow_array::cast::AsArray;
     use arrow_array::make_array;
-    use wasm_bindgen::JsCast;
     use wasm_bindgen_test::*;
+
+    #[wasm_bindgen(module = "/tests/arrow_helpers.cjs")]
+    extern "C" {
+        fn makeArrowJsInt32Data() -> JSData;
+        fn makeArrowJsFloat64Data() -> JSData;
+        fn makeArrowJsUtf8Data() -> JSData;
+    }
 
     fn set_property(obj: &js_sys::Object, key: &str, value: &JsValue) {
         js_sys::Reflect::set(obj, &JsValue::from_str(key), value).unwrap();
@@ -304,19 +310,6 @@ mod tests {
         set_property(&obj, "typeId", &JsValue::from(2));
         set_property(&obj, "bitWidth", &JsValue::from(bit_width));
         set_property(&obj, "isSigned", &JsValue::from(is_signed));
-        obj.into()
-    }
-
-    fn make_float_type(precision: i32) -> JsValue {
-        let obj = js_sys::Object::new();
-        set_property(&obj, "typeId", &JsValue::from(3));
-        set_property(&obj, "precision", &JsValue::from(precision));
-        obj.into()
-    }
-
-    fn make_utf8_type() -> JsValue {
-        let obj = js_sys::Object::new();
-        set_property(&obj, "typeId", &JsValue::from(5));
         obj.into()
     }
 
@@ -340,16 +333,8 @@ mod tests {
     }
 
     #[wasm_bindgen_test]
-    fn import_int32_values_from_int32_array() {
-        let values = js_sys::Int32Array::from([1i32, 2, 3].as_slice());
-        let data = make_data(
-            make_int_type(32, true),
-            3,
-            0,
-            values.into(),
-            js_sys::Int32Array::new_with_length(0).into(),
-        );
-        let imported = import_data(data.unchecked_ref()).unwrap();
+    fn import_int32_values_from_real_arrow_js_data() {
+        let imported = import_data(&makeArrowJsInt32Data()).unwrap();
         let array = make_array(imported);
         let actual = array
             .as_primitive::<arrow_array::types::Int32Type>()
@@ -358,16 +343,8 @@ mod tests {
     }
 
     #[wasm_bindgen_test]
-    fn import_float64_values_from_float64_array() {
-        let values = js_sys::Float64Array::from([1.5f64, -2.0].as_slice());
-        let data = make_data(
-            make_float_type(2),
-            2,
-            0,
-            values.into(),
-            js_sys::Int32Array::new_with_length(0).into(),
-        );
-        let imported = import_data(data.unchecked_ref()).unwrap();
+    fn import_float64_values_from_real_arrow_js_data() {
+        let imported = import_data(&makeArrowJsFloat64Data()).unwrap();
         let array = make_array(imported);
         let actual = array
             .as_primitive::<arrow_array::types::Float64Type>()
@@ -376,11 +353,8 @@ mod tests {
     }
 
     #[wasm_bindgen_test]
-    fn import_utf8_values_and_offsets() {
-        let values = js_sys::Uint8Array::from([b'a', b'b', b'c', b'd', b'e'].as_slice());
-        let offsets = js_sys::Int32Array::from([0i32, 2, 5].as_slice());
-        let data = make_data(make_utf8_type(), 2, 0, values.into(), offsets.into());
-        let imported = import_data(data.unchecked_ref()).unwrap();
+    fn import_utf8_values_from_real_arrow_js_data() {
+        let imported = import_data(&makeArrowJsUtf8Data()).unwrap();
         let array = make_array(imported);
         let actual = array.as_string::<i32>();
         assert_eq!(actual.value(0), "ab");
