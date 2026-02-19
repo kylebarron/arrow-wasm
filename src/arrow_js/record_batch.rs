@@ -26,7 +26,7 @@ extern "C" {
 impl RecordBatch {
     pub fn from_js(js_record_batch: &JSRecordBatch) -> WasmResult<Self> {
         let schema = import_schema(&js_record_batch.schema());
-        let data = import_data(&js_record_batch.data());
+        let data = import_data(&js_record_batch.data())?;
         let dyn_arr = make_array(data);
         let struct_arr = dyn_arr.as_struct();
 
@@ -39,7 +39,7 @@ impl RecordBatch {
         js_record_batch: &JSRecordBatch,
         schema: SchemaRef,
     ) -> WasmResult<Self> {
-        let data = import_data(&js_record_batch.data());
+        let data = import_data(&js_record_batch.data())?;
         let dyn_arr = make_array(data);
         let struct_arr = dyn_arr.as_struct();
 
