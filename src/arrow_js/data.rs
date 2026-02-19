@@ -1,10 +1,11 @@
-use arrow_buffer::{Buffer, IntervalMonthDayNano, i256};
+use arrow_buffer::{i256, Buffer, IntervalMonthDayNano};
 use arrow_data::ArrayData;
 use arrow_schema::{ArrowError, DataType, IntervalUnit, TimeUnit};
 use wasm_bindgen::prelude::*;
+use wasm_bindgen::JsCast;
 
-use crate::error::WasmResult;
 use crate::arrow_js::r#type::{import_data_type, JSDataType};
+use crate::error::WasmResult;
 
 #[wasm_bindgen]
 extern "C" {
@@ -90,84 +91,139 @@ fn bytes_for_typed_array(arr: &TypedArrayLike) -> Vec<u8> {
     uint8_view.to_vec()
 }
 
-fn decode_primitive_vec<T, const WIDTH: usize>(
-    arr: &TypedArrayLike,
-    parse: impl Fn([u8; WIDTH]) -> T,
-) -> WasmResult<Vec<T>> {
+fn decode_primitive_vec<T>(arr: &TypedArrayLike, parse: impl Fn(&[u8]) -> T) -> WasmResult<Vec<T>> {
+    let width = std::mem::size_of::<T>();
     let bytes = bytes_for_typed_array(arr);
-    if bytes.len() % WIDTH != 0 {
+    if bytes.len() % width != 0 {
         return Err(invalid_argument(format!(
             "typed buffer length {} is not divisible by element width {}",
             bytes.len(),
-            WIDTH
+            width
         )));
     }
-    Ok(bytes
-        .chunks_exact(WIDTH)
-        .map(|chunk| {
-            let mut raw = [0u8; WIDTH];
-            raw.copy_from_slice(chunk);
-            parse(raw)
-        })
-        .collect())
+    Ok(bytes.chunks_exact(width).map(parse).collect())
+}
+
+fn copy_i8_values(arr: &TypedArrayLike) -> WasmResult<Vec<i8>> {
+    arr.dyn_ref::<js_sys::Int8Array>()
+        .map(js_sys::Int8Array::to_vec)
+        .ok_or_else(|| invalid_argument("expected Int8Array"))
+}
+
+fn copy_u8_values(arr: &TypedArrayLike) -> WasmResult<Vec<u8>> {
+    arr.dyn_ref::<js_sys::Uint8Array>()
+        .map(js_sys::Uint8Array::to_vec)
+        .ok_or_else(|| invalid_argument("expected Uint8Array"))
+}
+
+fn copy_i16_values(arr: &TypedArrayLike) -> WasmResult<Vec<i16>> {
+    arr.dyn_ref::<js_sys::Int16Array>()
+        .map(js_sys::Int16Array::to_vec)
+        .ok_or_else(|| invalid_argument("expected Int16Array"))
+}
+
+fn copy_u16_values(arr: &TypedArrayLike) -> WasmResult<Vec<u16>> {
+    arr.dyn_ref::<js_sys::Uint16Array>()
+        .map(js_sys::Uint16Array::to_vec)
+        .ok_or_else(|| invalid_argument("expected Uint16Array"))
+}
+
+fn copy_i32_values(arr: &TypedArrayLike) -> WasmResult<Vec<i32>> {
+    arr.dyn_ref::<js_sys::Int32Array>()
+        .map(js_sys::Int32Array::to_vec)
+        .ok_or_else(|| invalid_argument("expected Int32Array"))
+}
+
+fn copy_u32_values(arr: &TypedArrayLike) -> WasmResult<Vec<u32>> {
+    arr.dyn_ref::<js_sys::Uint32Array>()
+        .map(js_sys::Uint32Array::to_vec)
+        .ok_or_else(|| invalid_argument("expected Uint32Array"))
+}
+
+fn copy_f32_values(arr: &TypedArrayLike) -> WasmResult<Vec<f32>> {
+    arr.dyn_ref::<js_sys::Float32Array>()
+        .map(js_sys::Float32Array::to_vec)
+        .ok_or_else(|| invalid_argument("expected Float32Array"))
+}
+
+fn copy_i64_values(arr: &TypedArrayLike) -> WasmResult<Vec<i64>> {
+    arr.dyn_ref::<js_sys::BigInt64Array>()
+        .map(js_sys::BigInt64Array::to_vec)
+        .ok_or_else(|| invalid_argument("expected BigInt64Array"))
+}
+
+fn copy_u64_values(arr: &TypedArrayLike) -> WasmResult<Vec<u64>> {
+    arr.dyn_ref::<js_sys::BigUint64Array>()
+        .map(js_sys::BigUint64Array::to_vec)
+        .ok_or_else(|| invalid_argument("expected BigUint64Array"))
+}
+
+fn copy_f64_values(arr: &TypedArrayLike) -> WasmResult<Vec<f64>> {
+    arr.dyn_ref::<js_sys::Float64Array>()
+        .map(js_sys::Float64Array::to_vec)
+        .ok_or_else(|| invalid_argument("expected Float64Array"))
 }
 
 fn copy_values_for_type(js_data: &JSData, data_type: &DataType) -> WasmResult<Buffer> {
     let values = js_data.values();
     let buffer = match data_type {
-        DataType::Boolean | DataType::Binary | DataType::LargeBinary | DataType::Utf8
-        | DataType::LargeUtf8 | DataType::FixedSizeBinary(_) => copy_typed_array_like(&values),
-        DataType::Int8 => Buffer::from_vec(decode_primitive_vec::<i8, 1>(&values, |b| b[0] as i8)?),
-        DataType::UInt8 => Buffer::from_vec(decode_primitive_vec::<u8, 1>(&values, |b| b[0])?),
-        DataType::Int16 => {
-            Buffer::from_vec(decode_primitive_vec::<i16, 2>(&values, i16::from_le_bytes)?)
-        }
-        DataType::UInt16 | DataType::Float16 => {
-            Buffer::from_vec(decode_primitive_vec::<u16, 2>(&values, u16::from_le_bytes)?)
-        }
+        DataType::Boolean
+        | DataType::Binary
+        | DataType::LargeBinary
+        | DataType::Utf8
+        | DataType::LargeUtf8
+        | DataType::FixedSizeBinary(_) => copy_typed_array_like(&values),
+        DataType::Int8 => Buffer::from_vec(copy_i8_values(&values)?),
+        DataType::UInt8 => Buffer::from_vec(copy_u8_values(&values)?),
+        DataType::Int16 => Buffer::from_vec(copy_i16_values(&values)?),
+        DataType::UInt16 | DataType::Float16 => Buffer::from_vec(copy_u16_values(&values)?),
         DataType::Int32
         | DataType::Date32
         | DataType::Time32(TimeUnit::Second)
         | DataType::Time32(TimeUnit::Millisecond)
         | DataType::Interval(IntervalUnit::YearMonth) => {
-            Buffer::from_vec(decode_primitive_vec::<i32, 4>(&values, i32::from_le_bytes)?)
+            Buffer::from_vec(copy_i32_values(&values)?)
         }
-        DataType::UInt32 => {
-            Buffer::from_vec(decode_primitive_vec::<u32, 4>(&values, u32::from_le_bytes)?)
-        }
-        DataType::Float32 => {
-            Buffer::from_vec(decode_primitive_vec::<f32, 4>(&values, f32::from_le_bytes)?)
-        }
+        DataType::UInt32 => Buffer::from_vec(copy_u32_values(&values)?),
+        DataType::Float32 => Buffer::from_vec(copy_f32_values(&values)?),
         DataType::Int64
         | DataType::Date64
         | DataType::Time64(TimeUnit::Microsecond)
         | DataType::Time64(TimeUnit::Nanosecond)
         | DataType::Timestamp(_, _)
         | DataType::Duration(_)
-        | DataType::Interval(IntervalUnit::DayTime) => {
-            Buffer::from_vec(decode_primitive_vec::<i64, 8>(&values, i64::from_le_bytes)?)
-        }
-        DataType::UInt64 => {
-            Buffer::from_vec(decode_primitive_vec::<u64, 8>(&values, u64::from_le_bytes)?)
-        }
-        DataType::Float64 => {
-            Buffer::from_vec(decode_primitive_vec::<f64, 8>(&values, f64::from_le_bytes)?)
-        }
+        | DataType::Interval(IntervalUnit::DayTime) => Buffer::from_vec(copy_i64_values(&values)?),
+        DataType::UInt64 => Buffer::from_vec(copy_u64_values(&values)?),
+        DataType::Float64 => Buffer::from_vec(copy_f64_values(&values)?),
         DataType::Decimal128(_, _) => {
-            Buffer::from_vec(decode_primitive_vec::<i128, 16>(&values, i128::from_le_bytes)?)
+            Buffer::from_vec(decode_primitive_vec::<i128>(&values, |b| {
+                i128::from_le_bytes([
+                    b[0], b[1], b[2], b[3], b[4], b[5], b[6], b[7], b[8], b[9], b[10], b[11],
+                    b[12], b[13], b[14], b[15],
+                ])
+            })?)
         }
         DataType::Decimal256(_, _) => {
-            Buffer::from_vec(decode_primitive_vec::<i256, 32>(&values, i256::from_le_bytes)?)
+            Buffer::from_vec(decode_primitive_vec::<i256>(&values, |b| {
+                i256::from_le_bytes([
+                    b[0], b[1], b[2], b[3], b[4], b[5], b[6], b[7], b[8], b[9], b[10], b[11],
+                    b[12], b[13], b[14], b[15], b[16], b[17], b[18], b[19], b[20], b[21], b[22],
+                    b[23], b[24], b[25], b[26], b[27], b[28], b[29], b[30], b[31],
+                ])
+            })?)
         }
-        DataType::Interval(IntervalUnit::MonthDayNano) => Buffer::from_vec(
-            decode_primitive_vec::<IntervalMonthDayNano, 16>(&values, |b| {
-                let months = i32::from_le_bytes([b[0], b[1], b[2], b[3]]);
-                let days = i32::from_le_bytes([b[4], b[5], b[6], b[7]]);
-                let nanoseconds =
-                    i64::from_le_bytes([b[8], b[9], b[10], b[11], b[12], b[13], b[14], b[15]]);
-                IntervalMonthDayNano::new(months, days, nanoseconds)
-            })?,
-        ),
+        DataType::Interval(IntervalUnit::MonthDayNano) => {
+            Buffer::from_vec(decode_primitive_vec::<IntervalMonthDayNano>(
+                &values,
+                |b| {
+                    let months = i32::from_le_bytes([b[0], b[1], b[2], b[3]]);
+                    let days = i32::from_le_bytes([b[4], b[5], b[6], b[7]]);
+                    let nanoseconds =
+                        i64::from_le_bytes([b[8], b[9], b[10], b[11], b[12], b[13], b[14], b[15]]);
+                    IntervalMonthDayNano::new(months, days, nanoseconds)
+                },
+            )?)
+        }
         _ => {
             return Err(invalid_argument(format!(
                 "unsupported values buffer data type in Arrow JS import: {data_type:?}"
@@ -181,17 +237,11 @@ fn copy_value_offsets_for_type(js_data: &JSData, data_type: &DataType) -> WasmRe
     let offsets = js_data.value_offsets();
     match data_type {
         DataType::Binary | DataType::Utf8 | DataType::List(_) | DataType::Map(_, _) => {
-            Ok(Buffer::from_vec(decode_primitive_vec::<i32, 4>(
-                offsets.unchecked_ref(),
-                i32::from_le_bytes,
-            )?))
+            Ok(Buffer::from_vec(copy_i32_values(offsets.unchecked_ref())?))
         }
-        DataType::LargeBinary | DataType::LargeUtf8 | DataType::LargeList(_) => Ok(
-            Buffer::from_vec(decode_primitive_vec::<i64, 8>(
-                offsets.unchecked_ref(),
-                i64::from_le_bytes,
-            )?),
-        ),
+        DataType::LargeBinary | DataType::LargeUtf8 | DataType::LargeList(_) => {
+            Ok(Buffer::from_vec(copy_i64_values(offsets.unchecked_ref())?))
+        }
         _ => Err(invalid_argument(format!(
             "offset buffer requested for unsupported data type: {data_type:?}"
         ))),
@@ -234,8 +284,7 @@ pub fn import_data(js_data: &JSData) -> WasmResult<ArrayData> {
         js_data.offset(),
         buffers,
         child_data,
-    )
-    ?)
+    )?)
 }
 
 #[cfg(all(test, target_arch = "wasm32"))]
@@ -290,18 +339,9 @@ mod tests {
         obj.into()
     }
 
-    fn uint8_view_with_offset(bytes: &[u8], start: u32) -> js_sys::Uint8Array {
-        let arr = js_sys::Uint8Array::from(bytes);
-        arr.subarray(start, bytes.len() as u32)
-    }
-
     #[wasm_bindgen_test]
-    fn import_int32_values_from_misaligned_bytes() {
-        let mut bytes = vec![0u8];
-        for value in [1i32, 2, 3] {
-            bytes.extend_from_slice(&value.to_le_bytes());
-        }
-        let values = uint8_view_with_offset(&bytes, 1);
+    fn import_int32_values_from_int32_array() {
+        let values = js_sys::Int32Array::from([1i32, 2, 3].as_slice());
         let data = make_data(
             make_int_type(32, true),
             3,
@@ -311,17 +351,15 @@ mod tests {
         );
         let imported = import_data(data.unchecked_ref()).unwrap();
         let array = make_array(imported);
-        let actual = array.as_primitive::<arrow_array::types::Int32Type>().values();
+        let actual = array
+            .as_primitive::<arrow_array::types::Int32Type>()
+            .values();
         assert_eq!(actual.as_ref(), &[1, 2, 3]);
     }
 
     #[wasm_bindgen_test]
-    fn import_float64_values_from_misaligned_bytes() {
-        let mut bytes = vec![0u8, 0u8];
-        for value in [1.5f64, -2.0] {
-            bytes.extend_from_slice(&value.to_le_bytes());
-        }
-        let values = uint8_view_with_offset(&bytes, 2);
+    fn import_float64_values_from_float64_array() {
+        let values = js_sys::Float64Array::from([1.5f64, -2.0].as_slice());
         let data = make_data(
             make_float_type(2),
             2,
@@ -340,11 +378,7 @@ mod tests {
     #[wasm_bindgen_test]
     fn import_utf8_values_and_offsets() {
         let values = js_sys::Uint8Array::from([b'a', b'b', b'c', b'd', b'e'].as_slice());
-        let mut offset_bytes = vec![];
-        for value in [0i32, 2, 5] {
-            offset_bytes.extend_from_slice(&value.to_le_bytes());
-        }
-        let offsets = js_sys::Uint8Array::from(offset_bytes.as_slice());
+        let offsets = js_sys::Int32Array::from([0i32, 2, 5].as_slice());
         let data = make_data(make_utf8_type(), 2, 0, values.into(), offsets.into());
         let imported = import_data(data.unchecked_ref()).unwrap();
         let array = make_array(imported);
