@@ -240,7 +240,7 @@ fn import_union(js_type: &JSUnion) -> DataType {
         .map(|val| i8::try_from(val).unwrap())
         .collect();
 
-    let union_fields = UnionFields::new(type_ids, fields);
+    let union_fields = UnionFields::try_new(type_ids, fields).unwrap();
     match js_type.mode() {
         UnionMode::Dense => DataType::Union(union_fields, arrow_schema::UnionMode::Dense),
         UnionMode::Sparse => DataType::Union(union_fields, arrow_schema::UnionMode::Sparse),
