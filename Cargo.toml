@@ -69,11 +69,11 @@ js-sys = "0.3.77"
 getrandom = { version = "0.2.15", features = ["js"] }
 thiserror = "2.0"
 
-arrow-array = { version = "58", features = ["ffi"] }
-arrow-buffer = "58"
-arrow-data = "58"
-arrow-ipc = "58"
-arrow-schema = "58"
+arrow-array = { version = "59", features = ["ffi"] }
+arrow-buffer = "59"
+arrow-data = "59"
+arrow-ipc = "59"
+arrow-schema = "59"
 
 serde = { version = "1.0", features = ["derive"] }
 serde-wasm-bindgen = "0.6"
