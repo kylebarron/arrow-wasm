@@ -113,7 +113,7 @@ impl Field {
 
     #[wasm_bindgen]
     pub fn metadata(&self) -> WasmResult<FieldMetadata> {
-        Ok(serde_wasm_bindgen::to_value(self.0.metadata())?.into())
+        Ok(serde_wasm_bindgen::to_value(&HashMap::from(self.0.metadata()))?.into())
     }
 
     /// Sets the metadata of this `Field` to be `metadata` and returns a new object
