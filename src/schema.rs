@@ -98,7 +98,7 @@ impl Schema {
     /// Returns an immutable reference to the Map of custom metadata key-value pairs.
     #[wasm_bindgen]
     pub fn metadata(&self) -> WasmResult<SchemaMetadata> {
-        Ok(serde_wasm_bindgen::to_value(self.0.metadata())?.into())
+        Ok(serde_wasm_bindgen::to_value(&HashMap::from(self.0.metadata()))?.into())
     }
 }
 

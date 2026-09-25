@@ -1,4 +1,5 @@
 use arrow_schema::Schema;
+use std::collections::HashMap;
 use wasm_bindgen::prelude::*;
 
 use crate::arrow_js::field::{import_field, JSField};
@@ -23,6 +24,7 @@ pub fn import_schema(js_schema: &JSSchema) -> Schema {
         .collect();
     Schema::new_with_metadata(
         fields,
-        serde_wasm_bindgen::from_value(js_schema.metadata().into()).unwrap(),
+        serde_wasm_bindgen::from_value::<HashMap<String, String>>(js_schema.metadata().into())
+            .unwrap(),
     )
 }

@@ -1,4 +1,5 @@
 use arrow_schema::Field;
+use std::collections::HashMap;
 use wasm_bindgen::prelude::*;
 
 use crate::arrow_js::r#type::{import_data_type, JSDataType};
@@ -23,6 +24,8 @@ extern "C" {
 
 pub fn import_field(js_field: &JSField) -> Field {
     let data_type = import_data_type(&js_field.data_type());
-    Field::new(js_field.name(), data_type, js_field.nullable())
-        .with_metadata(serde_wasm_bindgen::from_value(js_field.metadata().into()).unwrap())
+    Field::new(js_field.name(), data_type, js_field.nullable()).with_metadata(
+        serde_wasm_bindgen::from_value::<HashMap<String, String>>(js_field.metadata().into())
+            .unwrap(),
+    )
 }
